@@ -1,0 +1,70 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import SEO from '../../components/SEO.astro';
+import { generateBreadcrumbSchema } from '../../utils/schema';
+import { LANGUAGES, getUITranslations, defaultLanguage, type LanguageCode } from '../../utils/i18n';
+
+export const prerender = true;
+
+export async function getStaticPaths() {
+  const langs = Object.keys(LANGUAGES).filter(lang => lang !== defaultLanguage);
+  return langs.map(lang => ({
+    params: { lang },
+  }));
+}
+
+const { lang } = Astro.params;
+const currentLang = (lang || defaultLanguage) as LanguageCode;
+const t = getUITranslations(currentLang);
+
+const serviceInfoEntries = await getCollection('service-info');
+const serviceInfo = serviceInfoEntries[0];
+const data = serviceInfo?.data || {};
+const baseUrl = data.siteUrl || Astro.url.origin;
+const supportEmail = data.supportEmail || 'streamonlinever@gmail.com';
+
+const breadcrumbSchema = generateBreadcrumbSchema([
+  { name: t.nav.home || 'Home', url: baseUrl },
+  { name: t.footer?.gdprCompliance || 'GDPR Compliance', url: `${baseUrl}/${currentLang}/gdpr-compliance` },
+]);
+---
+
+<BaseLayout currentLang={currentLang}>
+  <SEO
+    slot="head"
+    title={`${t.footer?.gdprCompliance || 'GDPR Compliance'} - ${data.brandName}`}
+    description={`GDPR compliance information for ${data.brandName}.`}
+    canonicalURL={`${baseUrl}/${currentLang}/gdpr-compliance`}
+    schema={[breadcrumbSchema]}
+    languages={Object.fromEntries(
+      Object.keys(LANGUAGES)
+        .filter(l => l !== currentLang)
+        .map(l => [l, l === defaultLanguage ? `${baseUrl}/gdpr-compliance` : `${baseUrl}/${l}/gdpr-compliance`])
+    )}
+  />
+
+  <section class="py-20 bg-gradient-to-b from-background to-muted/30">
+    <div class="container mx-auto px-4 text-center">
+      <h1 class="text-4xl md:text-5xl font-bold mb-4">
+        {t.footer?.gdprCompliance || 'GDPR Compliance'}
+      </h1>
+      <p class="text-muted-foreground">
+        {t.legal?.lastUpdated || 'Last updated'}: {new Date().toLocaleDateString()}
+      </p>
+    </div>
+  </section>
+
+  <section class="py-16">
+    <div class="container mx-auto px-4 max-w-4xl prose dark:prose-invert">
+      <h2>{t.legal?.gdprRights || 'Your Rights Under GDPR'}</h2>
+      <p>{t.legal?.gdprRightsDesc || 'Under GDPR, you have the right to access, rectify, or erase your personal data.'}</p>
+      
+      <h2>{t.legal?.dataProcessing || 'Data Processing'}</h2>
+      <p>{t.legal?.dataProcessingDesc || 'We process your data based on legitimate interest and your consent.'}</p>
+      
+      <h2>{t.legal?.contactUs || 'Contact Us'}</h2>
+      <p>{t.legal?.contactUsDesc || 'For GDPR-related inquiries, please contact us at'}: <a href={`mailto:${supportEmail}`}>{supportEmail}</a></p>
+    </div>
+  </section>
+</BaseLayout>

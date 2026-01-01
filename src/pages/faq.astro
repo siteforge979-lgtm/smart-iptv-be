@@ -1,0 +1,86 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import SEO from '../components/SEO.astro';
+import FAQSection from '../components/FAQSection';
+import { generateBreadcrumbSchema, generateFAQSchema } from '../utils/schema';
+import { LANGUAGES, getUITranslations, defaultLanguage, type LanguageCode } from '../utils/i18n';
+
+const currentLang = defaultLanguage as LanguageCode;
+const t = getUITranslations(currentLang);
+
+const localizedHref = (path: string) => {
+  if (currentLang === defaultLanguage) return path;
+  const cleanPath = path === '/' ? '' : path;
+  return `/${currentLang}${cleanPath}`;
+};
+
+const [serviceInfoEntries, faqItems] = await Promise.all([
+  getCollection('service-info'),
+  getCollection('faq'),
+]);
+
+const serviceInfo = serviceInfoEntries[0];
+const data = serviceInfo?.data || {};
+const baseUrl = data.siteUrl || Astro.url.origin;
+
+const sortedFaq = [...faqItems].sort((a, b) => (a.data.order || 0) - (b.data.order || 0));
+
+const faqSchemaData = sortedFaq.map(f => ({
+  question: f.data.question,
+  answer: f.body || '',
+}));
+
+const faqSchema = generateFAQSchema(faqSchemaData);
+const breadcrumbSchema = generateBreadcrumbSchema([
+  { name: 'Home', url: baseUrl },
+  { name: 'FAQ', url: `${baseUrl}/faq` },
+]);
+---
+
+<BaseLayout currentLang={currentLang}>
+  <SEO
+    slot="head"
+    title={`${t.seo?.faqTitle || t.faq?.title || 'FAQ'} - ${data.brandName}`}
+    description={t.seo?.faqDesc || `Find answers to frequently asked questions about ${data.brandName} IPTV service.`}
+    canonicalURL={`${baseUrl}/faq`}
+    schema={[faqSchema, breadcrumbSchema]}
+    languages={Object.fromEntries(
+      Object.keys(LANGUAGES)
+        .filter(lang => lang !== currentLang)
+        .map(lang => [lang, `${baseUrl}/${lang}/faq`])
+    )}
+  />
+
+  <section class="py-20 bg-gradient-to-b from-background to-muted/30">
+    <div class="container mx-auto px-4 text-center">
+      <h1 class="text-4xl md:text-5xl font-bold mb-4">
+        {data.brandName} IPTV FAQ
+      </h1>
+      <p class="text-xl text-muted-foreground max-w-2xl mx-auto">
+        Find answers to common questions about our IPTV service, setup, and features.
+      </p>
+    </div>
+  </section>
+
+  <section class="py-16">
+    <div class="container mx-auto px-4 max-w-3xl">
+      <FAQSection client:load items={faqSchemaData} showHeader={false} />
+    </div>
+  </section>
+
+  <section class="py-16 bg-muted/30">
+    <div class="container mx-auto px-4 text-center">
+      <h2 class="text-2xl font-bold mb-4">Need {data.brandName} IPTV Support?</h2>
+      <p class="text-muted-foreground mb-6">
+        Our support team is here to help you 24/7.
+      </p>
+      <a
+        href={localizedHref('/contact')}
+        class="inline-flex items-center justify-center rounded-md bg-primary px-6 py-3 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors"
+      >
+        {t.nav.contact || 'Contact Support'}
+      </a>
+    </div>
+  </section>
+</BaseLayout>

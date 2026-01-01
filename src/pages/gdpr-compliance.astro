@@ -1,0 +1,114 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import SEO from '../components/SEO.astro';
+import { generateBreadcrumbSchema } from '../utils/schema';
+
+const [serviceInfoEntries] = await Promise.all([
+  getCollection('service-info'),
+]);
+const serviceInfo = serviceInfoEntries[0];
+const data = serviceInfo?.data || {};
+
+const brandName = data.brandName || 'IPTV Service';
+const baseUrl = data.siteUrl || Astro.url.origin;
+const supportEmail = data.supportEmail || 'streamonlinever@gmail.com';
+
+const breadcrumbSchema = generateBreadcrumbSchema([
+  { name: 'Home', url: baseUrl },
+  { name: 'GDPR Compliance', url: `${baseUrl}/gdpr-compliance` },
+]);
+---
+
+<BaseLayout>
+  <SEO
+    slot="head"
+    title={`GDPR Compliance - ${brandName}`}
+    description={`GDPR Compliance Statement for ${brandName}. Learn how we protect your personal data and your rights under the General Data Protection Regulation.`}
+    canonicalURL={`${baseUrl}/gdpr-compliance`}
+    schema={[breadcrumbSchema]}
+  />
+
+  <div class="container mx-auto px-4 py-12 max-w-4xl">
+    <h1 class="text-4xl font-bold mb-8">GDPR Compliance Statement</h1>
+    
+    <div class="prose prose-lg dark:prose-invert max-w-none">
+      <p class="text-muted-foreground">Last updated: {new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</p>
+      
+      <h2>1. Introduction</h2>
+      <p>
+        {brandName} ("we", "our", "us"), operating via <a href={baseUrl}>{baseUrl}</a>, is committed to ensuring the security and protection of the personal information that we process, and to provide a compliant and consistent approach to data protection. This statement outlines our commitment to compliance with the General Data Protection Regulation (GDPR) for our users within the European Economic Area (EEA). For detailed information on how we handle your data, please see our <a href="/privacy">Privacy Policy</a>.
+      </p>
+
+      <h2>2. Our Commitment</h2>
+      <p>
+        We are dedicated to safeguarding the personal information under our remit and in developing a data protection regime that is effective, fit for purpose, and demonstrates an understanding of, and appreciation for the GDPR regulation. Our objectives for GDPR compliance are:
+      </p>
+      <ul>
+        <li>To ensure that all personal data is processed lawfully, fairly, and transparently.</li>
+        <li>To collect personal data only for specified, explicit, and legitimate purposes.</li>
+        <li>To ensure that personal data is adequate, relevant, and limited to what is necessary.</li>
+        <li>To keep personal data accurate and up to date.</li>
+        <li>To store personal data no longer than necessary.</li>
+        <li>To process personal data in a manner that ensures appropriate security.</li>
+      </ul>
+
+      <h2>3. What Personal Data We Collect and Why</h2>
+      <p>We collect and process personal data as outlined in our <a href="/privacy">Privacy Policy</a>. This typically includes:</p>
+      <ul>
+        <li><strong>Account Information:</strong> Name, email address, subscription details for account management and service provision.</li>
+        <li><strong>Payment Information:</strong> Processed by secure third-party payment gateways for billing purposes. We do not store full credit card details.</li>
+        <li><strong>Usage Data:</strong> IP address, device information, access logs for service optimization, security, and troubleshooting.</li>
+      </ul>
+      <p>
+        The legal basis for processing this data includes contractual necessity (to provide the service you subscribed to, as per our <a href="/terms">Terms of Service</a>), legitimate interests (for service improvement, security), and consent (where applicable, e.g., for marketing communications).
+      </p>
+
+      <h2>4. Your Rights Under GDPR</h2>
+      <p>As an EEA resident, you have the following rights regarding your personal data:</p>
+      <ul>
+        <li><strong>The right to access:</strong> You have the right to request copies of your personal data.</li>
+        <li><strong>The right to rectification:</strong> You have the right to request that we correct any information you believe is inaccurate or complete information you believe is incomplete.</li>
+        <li><strong>The right to erasure (right to be forgotten):</strong> You have the right to request that we erase your personal data, under certain conditions.</li>
+        <li><strong>The right to restrict processing:</strong> You have the right to request that we restrict the processing of your personal data, under certain conditions.</li>
+        <li><strong>The right to object to processing:</strong> You have the right to object to our processing of your personal data, under certain conditions.</li>
+        <li><strong>The right to data portability:</strong> You have the right to request that we transfer the data that we have collected to another organization, or directly to you, under certain conditions.</li>
+      </ul>
+
+      <h2>5. Exercising Your Rights</h2>
+      <p>
+        To exercise any of these rights, please contact us at <a href={`mailto:${supportEmail}`}>{supportEmail}</a>. We will respond to your request within one month. We may need to verify your identity before processing your request.
+      </p>
+
+      <h2>6. Data Security</h2>
+      <p>
+        We have implemented appropriate technical and organizational measures to protect your personal data from unauthorized access, use, alteration, or disclosure. These measures are detailed in our <a href="/privacy">Privacy Policy</a>.
+      </p>
+
+      <h2>7. Data Transfers</h2>
+      <p>
+        Your information, including personal data, may be transferred to and maintained on computers located outside of your state, province, country, or other governmental jurisdiction where the data protection laws may differ from those of your jurisdiction. If you are located in the EEA and choose to provide information to us, please note that we transfer the data, including Personal Data, to servers which may be outside the EEA for processing. We will take all steps reasonably necessary to ensure that your data is treated securely and in accordance with this Privacy Policy and GDPR requirements, such as using Standard Contractual Clauses where applicable.
+      </p>
+
+      <h2>8. Data Protection Officer (DPO)</h2>
+      <p>
+        While not formally required to appoint a DPO under Article 37 of GDPR for our current scale of operations, we have designated a data privacy responsible individual/team to oversee our GDPR compliance efforts. You can reach this individual/team at <a href={`mailto:${supportEmail}`}>{supportEmail}</a> for any GDPR-related inquiries.
+      </p>
+
+      <h2>9. Complaints</h2>
+      <p>
+        If you have any concerns about our use of your personal information, you can make a complaint to us using the contact details on our website. You also have the right to lodge a complaint with a supervisory authority, in particular in the Member State of your habitual residence, place of work, or place of the alleged infringement if you consider that the processing of personal data relating to you infringes the GDPR.
+      </p>
+
+      <h2>10. Updates to This Statement</h2>
+      <p>
+        We may update this GDPR Compliance Statement from time to time. We will notify you of any changes by posting the new statement on this page and updating the "Last Updated" date.
+      </p>
+
+      <h2>11. Contact Us</h2>
+      <p>
+        For any questions regarding this GDPR Compliance Statement or our data protection practices, please contact us at: <a href={`mailto:${supportEmail}`}>{supportEmail}</a>
+      </p>
+    </div>
+  </div>
+</BaseLayout>

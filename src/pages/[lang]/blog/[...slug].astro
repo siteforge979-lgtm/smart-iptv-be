@@ -1,0 +1,200 @@
+---
+import { getCollection, render } from 'astro:content';
+import BlogLayout from '../../../layouts/BlogLayout.astro';
+import SEO from '../../../components/SEO.astro';
+import BlogCTA from '../../../components/BlogCTA';
+import TableOfContents from '../../../components/TableOfContents';
+import DirectAnswerBox from '../../../components/DirectAnswerBox.astro';
+import { generateArticleSchema, generateBreadcrumbSchema, generateWebPageSchema, generateFAQSchema } from '../../../utils/schema';
+import { LANGUAGES, getUITranslations, defaultLanguage, type LanguageCode, getDateLocale } from '../../../utils/i18n';
+import { getAIOverviewTranslations } from '../../../config/ui-translations';
+
+export const prerender = true;
+
+export async function getStaticPaths() {
+  const blogPosts = await getCollection('blog').catch(() => []);
+  const langs = Object.keys(LANGUAGES).filter(lang => lang !== defaultLanguage);
+  
+  const paths = [];
+  for (const lang of langs) {
+    for (const post of blogPosts) {
+      paths.push({
+        params: { lang, slug: post.id },
+        props: { post, lang },
+      });
+    }
+  }
+  return paths;
+}
+
+interface Props {
+  post: any;
+  lang: string;
+}
+
+const { post, lang } = Astro.props;
+const currentLang = (lang || defaultLanguage) as LanguageCode;
+const t = getUITranslations(currentLang);
+const dateLocale = getDateLocale(currentLang);
+
+const localizedHref = (path: string) => {
+  if (currentLang === defaultLanguage) return path;
+  const cleanPath = path === '/' ? '' : path;
+  return `/${currentLang}${cleanPath}`;
+};
+
+const { Content } = await render(post);
+
+const allPosts = await getCollection('blog').catch(() => []);
+const serviceInfoEntries = await getCollection('service-info');
+
+const tagRelatedPosts = allPosts
+  .filter(p => p.id !== post.id)
+  .filter(p => {
+    const sharedTags = post.data.tags?.filter((tag: string) => p.data.tags?.includes(tag)) || [];
+    return sharedTags.length > 0 || p.data.category === post.data.category;
+  })
+  .slice(0, 3);
+
+const relatedPosts = tagRelatedPosts.length > 0 
+  ? tagRelatedPosts 
+  : allPosts
+      .filter(p => p.id !== post.id)
+      .sort((a, b) => new Date(b.data.pubDate).getTime() - new Date(a.data.pubDate).getTime())
+      .slice(0, 3);
+
+const serviceInfo = serviceInfoEntries[0];
+const data = serviceInfo?.data || {};
+const baseUrl = data.siteUrl || Astro.url.origin;
+
+const articleSchema = generateArticleSchema({
+  headline: post.data.title,
+  description: post.data.description,
+  image: post.data.image ? `${baseUrl}${post.data.image}` : `${baseUrl}/og-image.jpg`,
+  datePublished: post.data.pubDate,
+  dateModified: post.data.updatedDate,
+  author: {
+    name: post.data.author,
+  },
+  publisher: {
+    name: data.brandName,
+    logo: `${baseUrl}/favicon.svg`,
+  },
+});
+
+const breadcrumbSchema = generateBreadcrumbSchema([
+  { name: t.nav.home || 'Home', url: baseUrl },
+  { name: t.nav.blog || 'Blog', url: `${baseUrl}/${currentLang}/blog` },
+  { name: post.data.title, url: `${baseUrl}/${currentLang}/blog/${post.id}` },
+]);
+
+const aiT = getAIOverviewTranslations(currentLang);
+
+const webPageSchema = generateWebPageSchema(
+  post.data.title,
+  post.data.description,
+  `${baseUrl}/${currentLang}/blog/${post.id}`,
+  post.data.pubDate,
+  post.data.updatedDate || post.data.pubDate,
+  ['[data-speakable="true"]', 'h1', 'h2', '.direct-answer', 'article p:first-of-type']
+);
+---
+
+<BlogLayout currentLang={currentLang}>
+  <SEO
+    slot="head"
+    title={post.data.title}
+    description={post.data.description}
+    canonicalURL={`${baseUrl}/${currentLang}/blog/${post.id}`}
+    ogImage={post.data.image ? `${baseUrl}${post.data.image}` : undefined}
+    ogType="article"
+    articleDate={post.data.pubDate}
+    articleModified={post.data.updatedDate}
+    articleAuthor={post.data.author}
+    articleTags={post.data.tags}
+    schema={[articleSchema, breadcrumbSchema, webPageSchema]}
+    pageType="blog"
+    breadcrumbs={[
+      { name: t.nav.home || 'Home', url: localizedHref('/') },
+      { name: t.nav.blog || 'Blog', url: localizedHref('/blog') },
+      { name: post.data.title, url: localizedHref(`/blog/${post.id}`) },
+    ]}
+    languages={Object.fromEntries(
+      Object.keys(LANGUAGES)
+        .filter(l => l !== currentLang)
+        .map(l => [l, l === defaultLanguage ? `${baseUrl}/blog/${post.id}` : `${baseUrl}/${l}/blog/${post.id}`])
+    )}
+  />
+
+  <header class="not-prose mb-8">
+    <div class="flex flex-wrap gap-2 mb-4">
+      {post.data.tags.map((tag: string) => (
+        <span class="text-xs px-3 py-1 bg-muted rounded-full text-muted-foreground">
+          {tag}
+        </span>
+      ))}
+    </div>
+    <h1 class="text-4xl font-bold mb-4">{post.data.title}</h1>
+    <div class="flex items-center gap-4 text-muted-foreground">
+      <span>{t.blog?.by || 'By'} {post.data.author}</span>
+      <span>|</span>
+      <time datetime={post.data.pubDate.toISOString()}>
+        {t.blog?.publishedOn || 'Published on'}: {post.data.pubDate.toLocaleDateString(dateLocale, {
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric',
+        })}
+      </time>
+    </div>
+  </header>
+
+  {post.data.directAnswer && (
+    <DirectAnswerBox 
+      answer={post.data.directAnswer}
+      icon="info"
+      translations={{
+        aiOverview: aiT.aiOverview,
+        quickAnswer: aiT.quickAnswer,
+      }}
+    />
+  )}
+
+  <div class="prose dark:prose-invert max-w-none" data-speakable="true">
+    <Content />
+  </div>
+
+  {post.data.ctaCouponCode && (
+    <div class="mt-8 not-prose">
+      <BlogCTA 
+        client:visible
+        headline={post.data.ctaHeadline}
+        description={post.data.ctaDescription}
+        couponCode={post.data.ctaCouponCode}
+        couponDiscount={post.data.ctaCouponDiscount}
+        ctaLink={localizedHref('/pricing')}
+        translations={{
+          copyCode: t.blog?.copyCode || 'Copy Code',
+          copied: t.blog?.copied || 'Copied!',
+          viewPlans: t.blog?.viewPlans || 'View Plans',
+        }}
+      />
+    </div>
+  )}
+
+  {relatedPosts.length > 0 && (
+    <section class="mt-16 not-prose">
+      <h2 class="text-2xl font-bold mb-6">{t.blog?.relatedPosts || 'Related Posts'}</h2>
+      <div class="grid md:grid-cols-3 gap-6">
+        {relatedPosts.map(relatedPost => (
+          <a 
+            href={localizedHref(`/blog/${relatedPost.id}`)}
+            class="block p-4 rounded-lg border border-border hover:border-primary transition-colors"
+          >
+            <h3 class="font-semibold mb-2 line-clamp-2">{relatedPost.data.title}</h3>
+            <p class="text-sm text-muted-foreground line-clamp-2">{relatedPost.data.description}</p>
+          </a>
+        ))}
+      </div>
+    </section>
+  )}
+</BlogLayout>

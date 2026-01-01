@@ -1,0 +1,146 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import SEO from '../../components/SEO.astro';
+import { generateBreadcrumbSchema } from '../../utils/schema';
+
+export async function getStaticPaths() {
+  const devices = await getCollection('devices').catch(() => []);
+  return devices.map(device => ({
+    params: { slug: device.id },
+    props: { device },
+  }));
+}
+
+interface Props {
+  device: any;
+}
+
+const { device } = Astro.props;
+const serviceInfoEntries = await getCollection('service-info');
+const serviceInfo = serviceInfoEntries[0];
+const data = serviceInfo?.data || {};
+const baseUrl = data.siteUrl || Astro.url.origin;
+
+const breadcrumbs = [
+  { name: 'Home', url: '/' },
+  { name: 'Devices', url: '/devices' },
+  { name: device.data.name, url: `/devices/${device.id}` },
+];
+
+const breadcrumbSchema = generateBreadcrumbSchema(
+  breadcrumbs.map(b => ({ ...b, url: `${baseUrl}${b.url}` }))
+);
+
+const pageSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'HowTo',
+  name: `How to Setup IPTV on ${device.data.name}`,
+  description: device.data.description,
+  step: [
+    {
+      '@type': 'HowToStep',
+      name: 'Download App',
+      text: `Download the IPTV app on your ${device.data.name}`,
+    },
+    {
+      '@type': 'HowToStep',
+      name: 'Enter Credentials',
+      text: 'Enter your subscription credentials provided after purchase',
+    },
+    {
+      '@type': 'HowToStep',
+      name: 'Start Watching',
+      text: 'Enjoy your premium IPTV content',
+    },
+  ],
+};
+---
+
+<BaseLayout>
+  <SEO
+    slot="head"
+    title={`IPTV on ${device.data.name} - Setup Guide`}
+    description={device.data.description}
+    canonicalURL={`${baseUrl}/devices/${device.id}`}
+    schema={[breadcrumbSchema, pageSchema]}
+    pageType="guide"
+    breadcrumbs={breadcrumbs}
+  />
+
+  <div class="max-w-4xl mx-auto px-4 py-12">
+    <nav class="mb-8">
+      <ol class="flex items-center gap-2 text-sm text-muted-foreground">
+        {breadcrumbs.map((crumb, i) => (
+          <>
+            {i > 0 && <span>/</span>}
+            <li>
+              {i < breadcrumbs.length - 1 ? (
+                <a href={crumb.url} class="hover:text-primary transition-colors">{crumb.name}</a>
+              ) : (
+                <span class="text-foreground font-medium">{crumb.name}</span>
+              )}
+            </li>
+          </>
+        ))}
+      </ol>
+    </nav>
+
+    <header class="mb-8">
+      <h1 class="text-4xl font-bold mb-4">IPTV on {device.data.name}</h1>
+      <p class="text-xl text-muted-foreground">{device.data.description}</p>
+    </header>
+
+    <div class="prose prose-lg dark:prose-invert max-w-none">
+      <h2>How to Setup IPTV on {device.data.name}</h2>
+      
+      <div class="not-prose bg-muted/30 rounded-lg p-6 mb-8">
+        <h3 class="text-lg font-semibold mb-4">Quick Setup Steps</h3>
+        <ol class="space-y-4">
+          <li class="flex gap-4">
+            <span class="flex-shrink-0 w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold">1</span>
+            <div>
+              <strong>Download the IPTV App</strong>
+              <p class="text-muted-foreground">Go to your app store and download an IPTV player app.</p>
+            </div>
+          </li>
+          <li class="flex gap-4">
+            <span class="flex-shrink-0 w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold">2</span>
+            <div>
+              <strong>Enter Your Credentials</strong>
+              <p class="text-muted-foreground">Input the M3U URL or Xtream codes provided after your subscription.</p>
+            </div>
+          </li>
+          <li class="flex gap-4">
+            <span class="flex-shrink-0 w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold">3</span>
+            <div>
+              <strong>Start Streaming</strong>
+              <p class="text-muted-foreground">Enjoy unlimited access to live TV channels and on-demand content.</p>
+            </div>
+          </li>
+        </ol>
+      </div>
+
+      {device.data.setupGuide && (
+        <div set:html={device.data.setupGuide} />
+      )}
+
+      <h2>Why Choose {data.brandName} for Your {device.data.name}?</h2>
+      <ul>
+        <li>Compatible with all major IPTV apps</li>
+        <li>HD and 4K streaming quality</li>
+        <li>24/7 customer support</li>
+        <li>Easy setup in minutes</li>
+      </ul>
+
+      <div class="not-prose mt-8">
+        <a 
+          href="/pricing" 
+          class="inline-flex items-center justify-center px-6 py-3 rounded-lg bg-primary text-primary-foreground font-semibold hover:opacity-90 transition-opacity"
+        >
+          Get Started Now
+        </a>
+      </div>
+    </div>
+  </div>
+</BaseLayout>

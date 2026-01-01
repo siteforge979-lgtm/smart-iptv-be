@@ -1,0 +1,142 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import SEO from '../components/SEO.astro';
+import { generateBreadcrumbSchema } from '../utils/schema';
+import { Shield, Clock, CheckCircle, MessageCircle } from 'lucide-react';
+
+const [serviceInfoEntries, siteConfigEntries] = await Promise.all([
+  getCollection('service-info'),
+  getCollection('site-config').catch(() => []),
+]);
+const serviceInfo = serviceInfoEntries[0];
+const data = serviceInfo?.data || {};
+const siteConfig = siteConfigEntries[0]?.data || {};
+const guaranteeDays = siteConfig.guaranteeDays || 30;
+
+const brandName = data.brandName || 'IPTV Service';
+const baseUrl = data.siteUrl || Astro.url.origin;
+const supportEmail = data.supportEmail || 'streamonlinever@gmail.com';
+
+const breadcrumbSchema = generateBreadcrumbSchema([
+  { name: 'Home', url: baseUrl },
+  { name: 'Refund Policy', url: `${baseUrl}/refund-policy` },
+]);
+---
+
+<BaseLayout>
+  <SEO
+    slot="head"
+    title={`Refund Policy - ${brandName} | ${guaranteeDays}-Day Money Back Guarantee`}
+    description={`${brandName} offers a ${guaranteeDays}-day money back guarantee. Read our refund policy to understand how to request a refund if you're not satisfied.`}
+    canonicalURL={`${baseUrl}/refund-policy`}
+    schema={[breadcrumbSchema]}
+  />
+
+  <div class="container mx-auto px-4 py-12 max-w-4xl">
+    <div class="text-center mb-12">
+      <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-green-500/10 text-green-600 mb-6">
+        <Shield className="w-5 h-5" />
+        <span class="font-medium">{guaranteeDays}-Day Money Back Guarantee</span>
+      </div>
+      <h1 class="text-4xl font-bold mb-4">Refund Policy</h1>
+      <p class="text-muted-foreground">Last updated: {new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</p>
+    </div>
+
+    <div class="bg-card border border-border rounded-xl p-8 mb-12">
+      <h2 class="text-2xl font-bold mb-6 text-center">How Refunds Work</h2>
+      <div class="grid md:grid-cols-3 gap-8">
+        <div class="text-center">
+          <div class="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
+            <MessageCircle className="w-6 h-6 text-primary" />
+          </div>
+          <h3 class="font-semibold mb-2">1. Contact Support</h3>
+          <p class="text-sm text-muted-foreground">Email us at {supportEmail} with your order details</p>
+        </div>
+        <div class="text-center">
+          <div class="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
+            <Clock className="w-6 h-6 text-primary" />
+          </div>
+          <h3 class="font-semibold mb-2">2. Quick Review</h3>
+          <p class="text-sm text-muted-foreground">We review your request within 24-48 hours</p>
+        </div>
+        <div class="text-center">
+          <div class="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
+            <CheckCircle className="w-6 h-6 text-primary" />
+          </div>
+          <h3 class="font-semibold mb-2">3. Receive Refund</h3>
+          <p class="text-sm text-muted-foreground">Full refund processed to your original payment method</p>
+        </div>
+      </div>
+    </div>
+    
+    <div class="prose prose-lg dark:prose-invert max-w-none">
+      <h2>Our Guarantee</h2>
+      <p>
+        At {brandName}, we stand behind our service quality. We offer a {guaranteeDays}-day money back guarantee 
+        on all new subscriptions. If you're not completely satisfied with our service, you can request a full 
+        refund within {guaranteeDays} days of your purchase - no questions asked.
+      </p>
+
+      <h2>Eligibility for Refunds</h2>
+      <p>You are eligible for a full refund if:</p>
+      <ul>
+        <li>Your refund request is made within {guaranteeDays} days of purchase</li>
+        <li>This is your first subscription with {brandName}</li>
+        <li>You have not violated our Terms of Service</li>
+        <li>You have not previously received a refund from us</li>
+      </ul>
+
+      <h2>How to Request a Refund</h2>
+      <p>To request a refund, please:</p>
+      <ol>
+        <li>Send an email to <a href={`mailto:${supportEmail}`}>{supportEmail}</a></li>
+        <li>Include your order number or the email used for purchase</li>
+        <li>Briefly explain why you're requesting a refund (optional but helpful)</li>
+      </ol>
+      <p>
+        We aim to process all refund requests within 24-48 business hours. Once approved, 
+        refunds typically appear in your account within 5-10 business days, depending on your payment provider.
+      </p>
+
+      <h2>Partial Refunds</h2>
+      <p>
+        For subscriptions beyond the {guaranteeDays}-day guarantee period, partial refunds may be considered on a 
+        case-by-case basis. These requests are evaluated based on:
+      </p>
+      <ul>
+        <li>Length of time since purchase</li>
+        <li>Usage of the service</li>
+        <li>Reason for cancellation</li>
+        <li>Any service issues on our end</li>
+      </ul>
+
+      <h2>Non-Refundable Situations</h2>
+      <p>Refunds will not be issued in the following cases:</p>
+      <ul>
+        <li>Requests made after the {guaranteeDays}-day guarantee period (without valid reason)</li>
+        <li>Violation of our Terms of Service or Acceptable Use Policy</li>
+        <li>Account suspension due to misuse</li>
+        <li>Second or subsequent subscriptions from the same user</li>
+      </ul>
+
+      <h2>Subscription Cancellation</h2>
+      <p>
+        You can cancel your subscription at any time. Cancellation will prevent future billing but 
+        does not automatically trigger a refund. If you wish to cancel and request a refund, please 
+        contact us directly.
+      </p>
+
+      <h2>Contact Us</h2>
+      <p>
+        If you have any questions about our refund policy, please don't hesitate to contact our support team:
+      </p>
+      <ul>
+        <li>Email: <a href={`mailto:${supportEmail}`}>{supportEmail}</a></li>
+      </ul>
+      <p>
+        We're committed to your satisfaction and will do our best to resolve any issues you may have.
+      </p>
+    </div>
+  </div>
+</BaseLayout>

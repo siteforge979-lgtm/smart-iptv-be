@@ -1,0 +1,184 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import SEO from '../../../components/SEO.astro';
+import ReadMore from '../../../components/ReadMore';
+import ProsCons from '../../../components/ProsCons';
+import TableOfContents from '../../../components/TableOfContents';
+import FAQSection from '../../../components/FAQSection';
+import { generateProductSchema, generateFAQSchema, generateBreadcrumbSchema } from '../../../utils/schema';
+import { LANGUAGES, getUITranslations, defaultLanguage, type LanguageCode } from '../../../utils/i18n';
+
+export const prerender = true;
+
+export async function getStaticPaths() {
+  const services = await getCollection('iptv-services').catch(() => []);
+  const langs = Object.keys(LANGUAGES).filter(lang => lang !== defaultLanguage);
+  
+  const paths = [];
+  for (const lang of langs) {
+    for (const service of services) {
+      paths.push({
+        params: { lang, slug: service.id },
+        props: { service, lang },
+      });
+    }
+  }
+  return paths;
+}
+
+const { service, lang } = Astro.props;
+const currentLang = (lang || defaultLanguage) as LanguageCode;
+const t = getUITranslations(currentLang);
+
+const localizedHref = (path: string) => {
+  if (currentLang === defaultLanguage) return path;
+  const cleanPath = path === '/' ? '' : path;
+  return `/${currentLang}${cleanPath}`;
+};
+
+const { Content } = await service.render();
+const data = service.data;
+
+const [serviceInfoEntries] = await Promise.all([
+  getCollection('service-info'),
+]);
+const serviceInfo = serviceInfoEntries[0];
+const siteData = serviceInfo?.data || {};
+const baseUrl = siteData.siteUrl || Astro.url.origin;
+
+const tocItems = [
+  { id: 'introduction', title: t.iptv?.introduction || 'Introduction', level: 2 },
+  { id: 'what-is', title: t.iptv?.whatIs?.replace('{name}', data.name) || `What is ${data.name}?`, level: 2 },
+  { id: 'channels-content', title: t.iptv?.channelsContent || 'Channels & Content', level: 2 },
+  { id: 'how-it-works', title: t.iptv?.howItWorks || 'How It Works', level: 2 },
+  { id: 'supported-devices', title: t.iptv?.supportedDevices || 'Supported Devices', level: 2 },
+  { id: 'pricing', title: t.iptv?.pricingTrial || 'Pricing & Free Trial', level: 2 },
+  { id: 'pros-cons', title: t.iptv?.prosCons || 'Pros & Cons', level: 2 },
+  { id: 'faq', title: t.nav.faq || 'FAQ', level: 2 },
+  { id: 'verdict', title: t.iptv?.verdict || 'Final Verdict', level: 2 },
+];
+
+const productSchema = generateProductSchema({
+  name: data.name,
+  description: data.description,
+  brand: data.name,
+  offers: [
+    {
+      priceCurrency: 'USD',
+      price: data.price || 9.99,
+      name: t.iptv?.monthlySubscription || 'Monthly Subscription',
+      url: `${baseUrl}/${currentLang}/iptv/${service.id}`,
+    },
+  ],
+  aggregateRating: {
+    ratingValue: data.rating || 4.5,
+    reviewCount: data.reviewCount || 100,
+  },
+});
+
+const faqSchema = data.faq ? generateFAQSchema(data.faq) : null;
+
+const breadcrumbSchema = generateBreadcrumbSchema([
+  { name: t.nav.home || 'Home', url: baseUrl },
+  { name: t.iptv?.title || 'IPTV Services', url: `${baseUrl}/${currentLang}/iptv` },
+  { name: data.name, url: `${baseUrl}/${currentLang}/iptv/${service.id}` },
+]);
+
+const schemas = [productSchema, breadcrumbSchema];
+if (faqSchema) schemas.push(faqSchema);
+---
+
+<BaseLayout currentLang={currentLang}>
+  <SEO
+    slot="head"
+    title={`${data.name} ${t.iptv?.review || 'Review'} ${new Date().getFullYear()} - ${t.iptv?.channelsPricingMore || 'Channels, Pricing & More'}`}
+    description={data.description}
+    canonicalURL={`${baseUrl}/${currentLang}/iptv/${service.id}`}
+    schema={schemas}
+    languages={Object.fromEntries(
+      Object.keys(LANGUAGES)
+        .filter(l => l !== currentLang)
+        .map(l => [l, l === defaultLanguage ? `${baseUrl}/iptv/${service.id}` : `${baseUrl}/${l}/iptv/${service.id}`])
+    )}
+  />
+
+  <article class="container mx-auto px-4 py-12 max-w-4xl">
+    <header class="mb-8">
+      <div class="flex items-center gap-2 text-sm text-muted-foreground mb-4">
+        <a href={localizedHref('/')} class="hover:text-primary">{t.nav.home || 'Home'}</a>
+        <span>/</span>
+        <a href={localizedHref('/iptv')} class="hover:text-primary">{t.iptv?.title || 'IPTV Services'}</a>
+        <span>/</span>
+        <span>{data.name}</span>
+      </div>
+      
+      <h1 class="text-4xl md:text-5xl font-bold mb-4">
+        {data.name} {t.iptv?.review || 'Review'} {new Date().getFullYear()}
+      </h1>
+      
+      <p class="text-xl text-muted-foreground">
+        {data.tagline || t.iptv?.completeReview?.replace('{name}', data.name) || `Complete review of ${data.name} IPTV service`}
+      </p>
+      
+      <div class="flex items-center gap-4 mt-6">
+        <div class="flex items-center gap-1">
+          {[...Array(5)].map((_, i) => (
+            <svg 
+              class={`h-5 w-5 ${i < Math.floor(data.rating || 4.5) ? 'text-yellow-400 fill-yellow-400' : 'text-muted-foreground'}`}
+              viewBox="0 0 24 24"
+            >
+              <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+            </svg>
+          ))}
+          <span class="ml-2 font-semibold">{data.rating || 4.5}/5</span>
+        </div>
+        <span class="text-muted-foreground">({data.reviewCount || 100} {t.common?.reviews || 'reviews'})</span>
+      </div>
+    </header>
+
+    <div class="grid lg:grid-cols-4 gap-8">
+      <aside class="lg:col-span-1">
+        <TableOfContents client:visible items={tocItems} />
+      </aside>
+      
+      <div class="lg:col-span-3 prose prose-lg dark:prose-invert max-w-none">
+        <section id="introduction">
+          <h2>{t.iptv?.introduction || 'Introduction'}</h2>
+          <Content />
+        </section>
+
+        <section id="pros-cons">
+          <h2>{t.iptv?.prosCons || 'Pros & Cons'}</h2>
+          <ProsCons 
+            client:visible
+            pros={data.pros || [
+              t.iptv?.defaultPro1 || 'Large channel selection',
+              t.iptv?.defaultPro2 || 'Affordable pricing',
+              t.iptv?.defaultPro3 || 'Good streaming quality',
+            ]}
+            cons={data.cons || [
+              t.iptv?.defaultCon1 || 'Limited payment options',
+            ]}
+          />
+        </section>
+
+        {data.faq && data.faq.length > 0 && (
+          <section id="faq">
+            <h2>{t.nav.faq || 'Frequently Asked Questions'}</h2>
+            <FAQSection 
+              client:load 
+              items={data.faq}
+              showHeader={false}
+            />
+          </section>
+        )}
+
+        <section id="verdict">
+          <h2>{t.iptv?.verdict || 'Final Verdict'}</h2>
+          <p>{data.verdict || t.iptv?.defaultVerdict?.replace('{name}', data.name) || `${data.name} is a solid IPTV service worth considering.`}</p>
+        </section>
+      </div>
+    </div>
+  </article>
+</BaseLayout>

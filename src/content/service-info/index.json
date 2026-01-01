@@ -1,0 +1,60 @@
+[
+  {
+    "id": "main",
+    "brandName": "smart--iptv.be",
+    "tagline": "Accédez au futur du divertissement avec Smart IPTV",
+    "description": "smart--iptv.be, votre portail vers l'IPTV de nouvelle génération en Belgique. Profitez d'un streaming fluide et d'un accès illimité à vos chaînes préférées, à tout moment et sur n'importe quel appareil. Contactez-nous à streamonlinever@gmail.com.",
+    "channelCount": 55000,
+    "vodCount": 90000,
+    "supportEmail": "streamonlinever@gmail.com",
+    "primaryColor": "#3B82F6",
+    "secondaryColor": "#1E40AF",
+    "siteUrl": "https://smart-iptv-be.pages.dev",
+    "features": [
+      {
+        "title": "Qualité d'image exceptionnelle",
+        "description": "Vivez une expérience visuelle immersive avec une qualité d'image remarquable, allant jusqu'à la 4K pour une clarté inégalée. Redécouvrez vos programmes favoris comme jamais auparavant.",
+        "icon": "Tv"
+      },
+      {
+        "title": "Large choix de canaux",
+        "description": "Explorez un vaste choix de chaînes, comprenant des émissions populaires, des films récents, des documentaires fascinants et bien plus encore, adaptés à tous les goûts.",
+        "icon": "Globe"
+      },
+      {
+        "title": "Aucune interruption publicitaire",
+        "description": "Profitez de vos contenus préférés sans aucune interruption publicitaire. Smart IPTV vous garantit un visionnage fluide et ininterrompu à chaque instant.",
+        "icon": "Shield"
+      },
+      {
+        "title": "Support client dédié",
+        "description": "Notre équipe de support est disponible 24 heures sur 24 pour répondre à toutes vos questions et vous aider à résoudre tout problème rapidement.",
+        "icon": "Users"
+      },
+      {
+        "title": "Options de paiement flexibles",
+        "description": "Choisissez parmi plusieurs options de paiement sécurisées, adaptées à vos besoins pour souscrire à notre service d'IPTV en toute sérénité.",
+        "icon": "CreditCard"
+      },
+      {
+        "title": "Expérience ultra-rapide",
+        "description": "Profitez d'une diffusion en flux continu ultra-rapide qui assure une diffusion fluide même avec les connexions Internet les plus lentes.",
+        "icon": "Zap"
+      },
+      {
+        "title": "Accès multi-appareils",
+        "description": "Regardez vos programmes préférés sur n'importe quel appareil, que ce soit votre téléviseur, smartphone, tablette ou ordinateur, à tout moment et de n'importe où.",
+        "icon": "Play"
+      },
+      {
+        "title": "Personnalisation des listes de lecture",
+        "description": "Personnalisez vos listes de lecture selon vos préférences, ajoutant ainsi une touche personnelle à votre expérience de divertissement avec Smart IPTV.",
+        "icon": "Settings"
+      }
+    ],
+    "paymentSettings": {
+      "buttonText": "Acheter Maintenant",
+      "paymentType": "whatsapp"
+    }
+  }
+]

@@ -1,0 +1,73 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import SEO from '../../components/SEO.astro';
+import { generateBreadcrumbSchema } from '../../utils/schema';
+import { LANGUAGES, getUITranslations, defaultLanguage, type LanguageCode } from '../../utils/i18n';
+
+export const prerender = true;
+
+export async function getStaticPaths() {
+  const langs = Object.keys(LANGUAGES).filter(lang => lang !== defaultLanguage);
+  return langs.map(lang => ({
+    params: { lang },
+  }));
+}
+
+const { lang } = Astro.params;
+const currentLang = (lang || defaultLanguage) as LanguageCode;
+const t = getUITranslations(currentLang);
+
+const serviceInfoEntries = await getCollection('service-info');
+const serviceInfo = serviceInfoEntries[0];
+const data = serviceInfo?.data || {};
+const baseUrl = data.siteUrl || Astro.url.origin;
+const supportEmail = data.supportEmail || 'streamonlinever@gmail.com';
+
+const breadcrumbSchema = generateBreadcrumbSchema([
+  { name: t.nav.home || 'Home', url: baseUrl },
+  { name: t.footer?.termsOfService || 'Terms of Service', url: `${baseUrl}/${currentLang}/terms` },
+]);
+---
+
+<BaseLayout currentLang={currentLang}>
+  <SEO
+    slot="head"
+    title={`${t.footer?.termsOfService || 'Terms of Service'} - ${data.brandName}`}
+    description={`Terms of service for ${data.brandName}. Read our terms and conditions.`}
+    canonicalURL={`${baseUrl}/${currentLang}/terms`}
+    schema={[breadcrumbSchema]}
+    languages={Object.fromEntries(
+      Object.keys(LANGUAGES)
+        .filter(l => l !== currentLang)
+        .map(l => [l, l === defaultLanguage ? `${baseUrl}/terms` : `${baseUrl}/${l}/terms`])
+    )}
+  />
+
+  <section class="py-20 bg-gradient-to-b from-background to-muted/30">
+    <div class="container mx-auto px-4 text-center">
+      <h1 class="text-4xl md:text-5xl font-bold mb-4">
+        {t.footer?.termsOfService || 'Terms of Service'}
+      </h1>
+      <p class="text-muted-foreground">
+        {t.legal?.lastUpdated || 'Last updated'}: {new Date().toLocaleDateString()}
+      </p>
+    </div>
+  </section>
+
+  <section class="py-16">
+    <div class="container mx-auto px-4 max-w-4xl prose dark:prose-invert">
+      <h2>{t.legal?.acceptance || 'Acceptance of Terms'}</h2>
+      <p>{t.legal?.acceptanceDesc || 'By accessing and using our service, you accept and agree to be bound by the terms and provisions of this agreement.'}</p>
+      
+      <h2>{t.legal?.serviceDescription || 'Service Description'}</h2>
+      <p>{t.legal?.serviceDescriptionDesc || 'We provide IPTV streaming services that allow you to access television content over the internet.'}</p>
+      
+      <h2>{t.legal?.userResponsibilities || 'User Responsibilities'}</h2>
+      <p>{t.legal?.userResponsibilitiesDesc || 'You are responsible for maintaining the confidentiality of your account and for all activities that occur under your account.'}</p>
+      
+      <h2>{t.legal?.contactUs || 'Contact Us'}</h2>
+      <p>{t.legal?.contactUsDesc || 'If you have any questions about these Terms, please contact us at'}: <a href={`mailto:${supportEmail}`}>{supportEmail}</a></p>
+    </div>
+  </section>
+</BaseLayout>

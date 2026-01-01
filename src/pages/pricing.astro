@@ -1,0 +1,201 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import SEO from '../components/SEO.astro';
+import PricingSection from '../components/PricingSection';
+import FAQSection from '../components/FAQSection';
+import { generateBreadcrumbSchema, generateProductSchema, generateWebPageSchema, generateComparisonTableSchema } from '../utils/schema';
+import { LANGUAGES, getUITranslations, defaultLanguage, type LanguageCode } from '../utils/i18n';
+import { getAIOverviewTranslations } from '../config/ui-translations';
+import LastUpdated from '../components/LastUpdated.astro';
+
+const currentLang = defaultLanguage as LanguageCode;
+const t = getUITranslations(currentLang);
+
+const [serviceInfoEntries, faqItems] = await Promise.all([
+  getCollection('service-info'),
+  getCollection('faq'),
+]);
+
+const serviceInfo = serviceInfoEntries[0];
+const data = serviceInfo?.data || {};
+const baseUrl = data.siteUrl || Astro.url.origin;
+const adminApiUrl = data.adminApiUrl || '';
+const websiteId = data.websiteId || '';
+const leadCaptureEnabled = data.leadCaptureEnabled !== false;
+
+const pricingFaq = faqItems
+  .filter(f => f.data.category === 'pricing' || !f.data.category)
+  .slice(0, 5);
+
+const productSchema = generateProductSchema({
+  name: `${data.brandName} IPTV Subscription`,
+  description: `Premium IPTV service with ${data.channelCount}+ channels and ${data.vodCount}+ movies`,
+  brand: data.brandName,
+  offers: [
+    { priceCurrency: 'USD', price: 35, name: 'Starter Package - 1 Device', url: `${baseUrl}/pricing` },
+    { priceCurrency: 'USD', price: 45, name: 'Standard Package - 1 Device', url: `${baseUrl}/pricing` },
+    { priceCurrency: 'USD', price: 79, name: 'Premium Package - 1 Device', url: `${baseUrl}/pricing` },
+  ],
+});
+
+const breadcrumbSchema = generateBreadcrumbSchema([
+  { name: 'Home', url: baseUrl },
+  { name: 'Pricing', url: `${baseUrl}/pricing` },
+]);
+
+const aiT = getAIOverviewTranslations(currentLang);
+const lastUpdatedDate = new Date();
+
+const webPageSchema = generateWebPageSchema(
+  `${t.seo?.pricingTitle || 'Pricing Plans'} - ${data.brandName}`,
+  t.seo?.pricingDesc?.replace('{channels}', String(data.channelCount || 28000)) || `Explore ${data.brandName} pricing plans with ${data.channelCount}+ channels.`,
+  `${baseUrl}/pricing`,
+  new Date('2024-01-01'),
+  lastUpdatedDate,
+  ['[data-speakable="true"]', 'h1', 'h2', '.pricing-comparison']
+);
+
+const comparisonSchema = generateComparisonTableSchema(
+  `${data.brandName} ${aiT.comparePlans}`,
+  aiT.findPerfectPlan,
+  [
+    { name: t.pricing?.starterPackage || 'Starter Package', description: '3 months subscription', price: 35, priceCurrency: 'USD', features: [`${data.channelCount}+ ${t.hero?.liveChannels || 'Live Channels'}`, `${data.vodCount}+ ${t.hero?.moviesAndSeries || 'Movies & Series'}`, t.pricing?.antiFreeze || 'Anti-Freeze Technology'] },
+    { name: t.pricing?.standardPackage || 'Standard Package', description: '6 months subscription', price: 45, priceCurrency: 'USD', features: [`${data.channelCount}+ ${t.hero?.liveChannels || 'Live Channels'}`, `${data.vodCount}+ ${t.hero?.moviesAndSeries || 'Movies & Series'}`, t.pricing?.antiFreeze || 'Anti-Freeze Technology'] },
+    { name: t.pricing?.premiumPackage || 'Premium Package', description: '12 months subscription', price: 79, priceCurrency: 'USD', features: [`${data.channelCount}+ ${t.hero?.liveChannels || 'Live Channels'}`, `${data.vodCount}+ ${t.hero?.moviesAndSeries || 'Movies & Series'}`, t.pricing?.antiFreeze || 'Anti-Freeze Technology', t.pricing?.bonusMonths || '+ 3 months free'] },
+  ]
+);
+---
+
+<BaseLayout currentLang={currentLang}>
+  <SEO
+    slot="head"
+    title={`${t.seo?.pricingTitle || 'Pricing Plans'} - ${data.brandName}`}
+    description={t.seo?.pricingDesc?.replace('{channels}', String(data.channelCount || 28000)) || `Explore ${data.brandName} pricing plans with ${data.channelCount}+ channels.`}
+    canonicalURL={`${baseUrl}/pricing`}
+    schema={[productSchema, breadcrumbSchema, webPageSchema, comparisonSchema]}
+    languages={Object.fromEntries(
+      Object.keys(LANGUAGES)
+        .filter(lang => lang !== currentLang)
+        .map(lang => [lang, `${baseUrl}/${lang}/pricing`])
+    )}
+  />
+
+  <section class="py-16 bg-gradient-to-b from-background to-muted/30">
+    <div class="container mx-auto px-4 text-center">
+      <h1 class="text-4xl md:text-5xl font-bold mb-4" data-speakable="true">
+        {t.pricing?.headerTitle || `Choose Your Perfect ${data.brandName} Plan`}
+      </h1>
+      <p class="text-xl text-muted-foreground max-w-2xl mx-auto mb-4" data-speakable="true">
+        {t.pricing?.headerSubtitle || 'Flexible pricing options designed to fit your entertainment needs. All plans include full access to our premium features.'}
+      </p>
+      <LastUpdated 
+        date={lastUpdatedDate} 
+        locale={currentLang} 
+        label={aiT.lastUpdated}
+        className="justify-center"
+      />
+    </div>
+  </section>
+
+  <PricingSection
+    client:load
+    primaryColor={data.primaryColor}
+    ctaLink={data.ctaUrl || '#order'}
+    defaultDevice={1}
+    showHeader={false}
+    paymentSettings={data.paymentSettings}
+    brandName={data.brandName}
+    baseUrl={baseUrl}
+    leadCaptureEnabled={leadCaptureEnabled}
+    adminApiUrl={adminApiUrl}
+    websiteId={websiteId}
+  />
+
+  <section class="py-16 bg-muted/30">
+    <div class="container mx-auto px-4">
+      <h2 class="text-3xl font-bold text-center mb-8">All {data.brandName} IPTV Plans Include</h2>
+      <div class="grid md:grid-cols-3 gap-8 max-w-4xl mx-auto">
+        <div class="text-center">
+          <div class="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
+            <svg class="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+            </svg>
+          </div>
+          <h3 class="font-semibold mb-2">{data.channelCount}+ Live Channels</h3>
+          <p class="text-sm text-muted-foreground">Access to premium sports, news, and entertainment channels worldwide</p>
+        </div>
+        <div class="text-center">
+          <div class="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
+            <svg class="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 4v16M17 4v16M3 8h4m10 0h4M3 12h18M3 16h4m10 0h4" />
+            </svg>
+          </div>
+          <h3 class="font-semibold mb-2">{data.vodCount}+ Movies & Series</h3>
+          <p class="text-sm text-muted-foreground">Unlimited access to our extensive on-demand library</p>
+        </div>
+        <div class="text-center">
+          <div class="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
+            <svg class="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+          <h3 class="font-semibold mb-2">24/7 Customer Support</h3>
+          <p class="text-sm text-muted-foreground">Expert assistance whenever you need it via chat, email, or phone</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  {pricingFaq.length > 0 && (
+    <section class="py-16">
+      <div class="container mx-auto px-4">
+        <h2 class="text-3xl font-bold text-center mb-12">{data.brandName} IPTV FAQ</h2>
+        <FAQSection client:visible items={pricingFaq.map(f => ({ question: f.data.question, answer: f.body || '' }))} showHeader={false} />
+      </div>
+    </section>
+  )}
+
+  <section class="py-16 bg-primary/5">
+    <div class="container mx-auto px-4 text-center">
+      <h2 class="text-3xl font-bold mb-4">Need Help Choosing?</h2>
+      <p class="text-lg text-muted-foreground max-w-2xl mx-auto mb-8">
+        Not sure which plan is right for you? Our team is here to help you find the perfect option for your needs.
+      </p>
+      <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
+        {data.contactInfo?.whatsappNumber && (
+          <a 
+            href={`https://wa.me/${data.contactInfo.whatsappNumber.replace(/\D/g, '')}`} 
+            target="_blank" 
+            rel="noopener noreferrer"
+            class="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-[#25D366] text-white font-medium hover:opacity-90 transition-opacity"
+          >
+            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+            Chat on WhatsApp
+          </a>
+        )}
+        <a 
+          href="/contact" 
+          class="inline-flex items-center gap-2 px-6 py-3 rounded-lg border border-border bg-card font-medium hover:bg-accent transition-colors"
+        >
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+          Contact Us
+        </a>
+      </div>
+      <div class="mt-8 flex items-center justify-center gap-6 text-sm text-muted-foreground">
+        <div class="flex items-center gap-2">
+          <svg class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+          Secure Payment
+        </div>
+        <div class="flex items-center gap-2">
+          <svg class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          Instant Activation
+        </div>
+        <div class="flex items-center gap-2">
+          <svg class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
+          30-Day Guarantee
+        </div>
+      </div>
+    </div>
+  </section>
+</BaseLayout>

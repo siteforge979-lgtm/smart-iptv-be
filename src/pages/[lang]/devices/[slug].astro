@@ -1,0 +1,160 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import SEO from '../../../components/SEO.astro';
+import { generateBreadcrumbSchema } from '../../../utils/schema';
+import { LANGUAGES, getUITranslations, defaultLanguage, type LanguageCode } from '../../../utils/i18n';
+
+export const prerender = true;
+
+export async function getStaticPaths() {
+  const devices = await getCollection('devices').catch(() => []);
+  const langs = Object.keys(LANGUAGES).filter(lang => lang !== defaultLanguage);
+  
+  const paths = [];
+  for (const lang of langs) {
+    for (const device of devices) {
+      paths.push({
+        params: { lang, slug: device.id },
+        props: { device, lang },
+      });
+    }
+  }
+  return paths;
+}
+
+interface Props {
+  device: any;
+  lang: string;
+}
+
+const { device, lang } = Astro.props;
+const currentLang = (lang || defaultLanguage) as LanguageCode;
+const t = getUITranslations(currentLang);
+
+const localizedHref = (path: string) => {
+  if (currentLang === defaultLanguage) return path;
+  const cleanPath = path === '/' ? '' : path;
+  return `/${currentLang}${cleanPath}`;
+};
+
+const serviceInfoEntries = await getCollection('service-info');
+const serviceInfo = serviceInfoEntries[0];
+const data = serviceInfo?.data || {};
+const baseUrl = data.siteUrl || Astro.url.origin;
+
+const breadcrumbs = [
+  { name: t.nav.home || 'Home', url: localizedHref('/') },
+  { name: t.nav.devices || 'Devices', url: localizedHref('/devices') },
+  { name: device.data.name, url: localizedHref(`/devices/${device.id}`) },
+];
+
+const breadcrumbSchema = generateBreadcrumbSchema(
+  breadcrumbs.map(b => ({ ...b, url: `${baseUrl}${b.url}` }))
+);
+
+const pageSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'HowTo',
+  name: t.devices?.howToSetup?.replace('{device}', device.data.name) || `How to Setup IPTV on ${device.data.name}`,
+  description: device.data.description,
+  step: [
+    {
+      '@type': 'HowToStep',
+      name: t.devices?.step1Title || 'Download App',
+      text: t.devices?.step1Desc?.replace('{device}', device.data.name) || `Download the IPTV app on your ${device.data.name}`,
+    },
+    {
+      '@type': 'HowToStep',
+      name: t.devices?.step2Title || 'Enter Credentials',
+      text: t.devices?.step2Desc || 'Enter your subscription credentials provided after purchase',
+    },
+    {
+      '@type': 'HowToStep',
+      name: t.devices?.step3Title || 'Start Watching',
+      text: t.devices?.step3Desc || 'Enjoy your premium IPTV content',
+    },
+  ],
+};
+---
+
+<BaseLayout currentLang={currentLang}>
+  <SEO
+    slot="head"
+    title={`${t.devices?.iptvOn?.replace('{device}', device.data.name) || `IPTV on ${device.data.name}`} - ${t.devices?.setupGuide || 'Setup Guide'}`}
+    description={device.data.description}
+    canonicalURL={`${baseUrl}/${currentLang}/devices/${device.id}`}
+    schema={[breadcrumbSchema, pageSchema]}
+    pageType="guide"
+    breadcrumbs={breadcrumbs}
+    languages={Object.fromEntries(
+      Object.keys(LANGUAGES)
+        .filter(l => l !== currentLang)
+        .map(l => [l, l === defaultLanguage ? `${baseUrl}/devices/${device.id}` : `${baseUrl}/${l}/devices/${device.id}`])
+    )}
+  />
+
+  <div class="max-w-4xl mx-auto px-4 py-12">
+    <nav class="mb-8">
+      <ol class="flex items-center gap-2 text-sm text-muted-foreground">
+        {breadcrumbs.map((crumb, i) => (
+          <>
+            {i > 0 && <span>/</span>}
+            <li>
+              {i < breadcrumbs.length - 1 ? (
+                <a href={crumb.url} class="hover:text-primary transition-colors">{crumb.name}</a>
+              ) : (
+                <span class="text-foreground font-medium">{crumb.name}</span>
+              )}
+            </li>
+          </>
+        ))}
+      </ol>
+    </nav>
+
+    <header class="mb-8">
+      <h1 class="text-4xl font-bold mb-4">{t.devices?.iptvOn?.replace('{device}', device.data.name) || `IPTV on ${device.data.name}`}</h1>
+      <p class="text-xl text-muted-foreground">{device.data.description}</p>
+    </header>
+
+    <div class="prose prose-lg dark:prose-invert max-w-none">
+      <h2>{t.devices?.howToSetup?.replace('{device}', device.data.name) || `How to Setup IPTV on ${device.data.name}`}</h2>
+      
+      <div class="not-prose bg-muted/30 rounded-lg p-6 mb-8">
+        <h3 class="text-lg font-semibold mb-4">{t.devices?.quickSetup || 'Quick Setup Steps'}</h3>
+        <ol class="space-y-4">
+          <li class="flex gap-4">
+            <span class="flex-shrink-0 w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold">1</span>
+            <div>
+              <strong>{t.devices?.step1Title || 'Download the IPTV App'}</strong>
+              <p class="text-muted-foreground">{t.devices?.step1Detail || 'Go to your app store and download an IPTV player app.'}</p>
+            </div>
+          </li>
+          <li class="flex gap-4">
+            <span class="flex-shrink-0 w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold">2</span>
+            <div>
+              <strong>{t.devices?.step2Title || 'Enter Credentials'}</strong>
+              <p class="text-muted-foreground">{t.devices?.step2Detail || 'Enter your subscription credentials.'}</p>
+            </div>
+          </li>
+          <li class="flex gap-4">
+            <span class="flex-shrink-0 w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold">3</span>
+            <div>
+              <strong>{t.devices?.step3Title || 'Start Watching'}</strong>
+              <p class="text-muted-foreground">{t.devices?.step3Detail || 'Enjoy your premium IPTV content!'}</p>
+            </div>
+          </li>
+        </ol>
+      </div>
+
+      <div class="text-center">
+        <a 
+          href={localizedHref('/pricing')}
+          class="inline-flex items-center justify-center rounded-md bg-primary px-6 py-3 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors"
+        >
+          {t.hero.getStarted || 'Get Started'}
+        </a>
+      </div>
+    </div>
+  </div>
+</BaseLayout>

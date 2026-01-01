@@ -1,0 +1,113 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import SEO from '../../components/SEO.astro';
+import { generateBreadcrumbSchema } from '../../utils/schema';
+import { LANGUAGES, getUITranslations, defaultLanguage, type LanguageCode } from '../../utils/i18n';
+
+const currentLang = defaultLanguage as LanguageCode;
+const t = getUITranslations(currentLang);
+
+const [devices, serviceInfoEntries] = await Promise.all([
+  getCollection('devices').catch(() => []),
+  getCollection('service-info'),
+]);
+
+const serviceInfo = serviceInfoEntries[0];
+const data = serviceInfo?.data || {};
+const baseUrl = data.siteUrl || Astro.url.origin;
+
+const breadcrumbs = [
+  { name: t.nav.home || 'Home', url: '/' },
+  { name: t.nav.devices || 'Compatible Devices', url: '/devices' },
+];
+
+const breadcrumbSchema = generateBreadcrumbSchema(
+  breadcrumbs.map(b => ({ ...b, url: `${baseUrl}${b.url}` }))
+);
+
+const sortedDevices = devices.sort((a: any, b: any) => (a.data.order || 0) - (b.data.order || 0));
+
+const devicesByCategory = sortedDevices.reduce((acc: Record<string, any[]>, device: any) => {
+  const category = device.data.category || 'Other';
+  if (!acc[category]) acc[category] = [];
+  acc[category].push(device);
+  return acc;
+}, {});
+---
+
+<BaseLayout currentLang={currentLang}>
+  <SEO
+    slot="head"
+    title={`${t.devices?.title || 'Compatible Devices'} - ${data.brandName}`}
+    description={t.devices?.metaDesc?.replace('{brand}', data.brandName) || `Learn how to setup ${data.brandName} IPTV on all your devices.`}
+    canonicalURL={`${baseUrl}/devices`}
+    schema={[breadcrumbSchema]}
+    pageType="guide"
+    breadcrumbs={breadcrumbs}
+    languages={Object.fromEntries(
+      Object.keys(LANGUAGES)
+        .filter(l => l !== currentLang)
+        .map(l => [l, `${baseUrl}/${l}/devices`])
+    )}
+  />
+
+  <div class="max-w-6xl mx-auto px-4 py-12">
+    <nav class="mb-8">
+      <ol class="flex items-center gap-2 text-sm text-muted-foreground">
+        {breadcrumbs.map((crumb, i) => (
+          <>
+            {i > 0 && <span>/</span>}
+            <li>
+              {i < breadcrumbs.length - 1 ? (
+                <a href={crumb.url} class="hover:text-primary transition-colors">{crumb.name}</a>
+              ) : (
+                <span class="text-foreground font-medium">{crumb.name}</span>
+              )}
+            </li>
+          </>
+        ))}
+      </ol>
+    </nav>
+
+    <header class="text-center mb-12">
+      <h1 class="text-4xl font-bold mb-4">Compatible Devices</h1>
+      <p class="text-xl text-muted-foreground max-w-2xl mx-auto">
+        {data.brandName} works on all your favorite devices. Choose your device below for a step-by-step setup guide.
+      </p>
+    </header>
+
+    {Object.entries(devicesByCategory).map(([category, categoryDevices]) => (
+      <section class="mb-12">
+        <h2 class="text-2xl font-bold mb-6">{category}</h2>
+        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {(categoryDevices as any[]).map((device: any) => (
+            <a
+              href={`/devices/${device.id}`}
+              class="group block p-6 rounded-lg border border-border hover:border-primary transition-all hover:shadow-lg"
+            >
+              <h3 class="text-lg font-semibold mb-2 group-hover:text-primary transition-colors">
+                {device.data.name}
+              </h3>
+              <p class="text-muted-foreground text-sm line-clamp-2">
+                {device.data.description}
+              </p>
+              <span class="inline-flex items-center gap-1 mt-4 text-primary text-sm font-medium">
+                View Setup Guide
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                </svg>
+              </span>
+            </a>
+          ))}
+        </div>
+      </section>
+    ))}
+
+    {devices.length === 0 && (
+      <div class="text-center py-12">
+        <p class="text-muted-foreground">Device guides coming soon!</p>
+      </div>
+    )}
+  </div>
+</BaseLayout>

@@ -1,0 +1,73 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import SEO from '../../components/SEO.astro';
+import { generateBreadcrumbSchema } from '../../utils/schema';
+import { LANGUAGES, getUITranslations, defaultLanguage, type LanguageCode } from '../../utils/i18n';
+
+export const prerender = true;
+
+export async function getStaticPaths() {
+  const langs = Object.keys(LANGUAGES).filter(lang => lang !== defaultLanguage);
+  return langs.map(lang => ({
+    params: { lang },
+  }));
+}
+
+const { lang } = Astro.params;
+const currentLang = (lang || defaultLanguage) as LanguageCode;
+const t = getUITranslations(currentLang);
+
+const serviceInfoEntries = await getCollection('service-info');
+const serviceInfo = serviceInfoEntries[0];
+const data = serviceInfo?.data || {};
+const baseUrl = data.siteUrl || Astro.url.origin;
+const supportEmail = data.supportEmail || 'streamonlinever@gmail.com';
+
+const breadcrumbSchema = generateBreadcrumbSchema([
+  { name: t.nav.home || 'Home', url: baseUrl },
+  { name: t.footer?.privacyPolicy || 'Privacy Policy', url: `${baseUrl}/${currentLang}/privacy` },
+]);
+---
+
+<BaseLayout currentLang={currentLang}>
+  <SEO
+    slot="head"
+    title={`${t.footer?.privacyPolicy || 'Privacy Policy'} - ${data.brandName}`}
+    description={`Privacy policy for ${data.brandName}. Learn how we collect, use, and protect your data.`}
+    canonicalURL={`${baseUrl}/${currentLang}/privacy`}
+    schema={[breadcrumbSchema]}
+    languages={Object.fromEntries(
+      Object.keys(LANGUAGES)
+        .filter(l => l !== currentLang)
+        .map(l => [l, l === defaultLanguage ? `${baseUrl}/privacy` : `${baseUrl}/${l}/privacy`])
+    )}
+  />
+
+  <section class="py-20 bg-gradient-to-b from-background to-muted/30">
+    <div class="container mx-auto px-4 text-center">
+      <h1 class="text-4xl md:text-5xl font-bold mb-4">
+        {t.footer?.privacyPolicy || 'Privacy Policy'}
+      </h1>
+      <p class="text-muted-foreground">
+        {t.legal?.lastUpdated || 'Last updated'}: {new Date().toLocaleDateString()}
+      </p>
+    </div>
+  </section>
+
+  <section class="py-16">
+    <div class="container mx-auto px-4 max-w-4xl prose dark:prose-invert">
+      <h2>{t.legal?.informationCollection || 'Information We Collect'}</h2>
+      <p>{t.legal?.informationCollectionDesc || 'We collect information you provide directly to us, such as when you create an account, make a purchase, or contact us for support.'}</p>
+      
+      <h2>{t.legal?.howWeUse || 'How We Use Your Information'}</h2>
+      <p>{t.legal?.howWeUseDesc || 'We use the information we collect to provide, maintain, and improve our services, process transactions, and communicate with you.'}</p>
+      
+      <h2>{t.legal?.dataSecurity || 'Data Security'}</h2>
+      <p>{t.legal?.dataSecurityDesc || 'We take reasonable measures to help protect your personal information from loss, theft, misuse, and unauthorized access.'}</p>
+      
+      <h2>{t.legal?.contactUs || 'Contact Us'}</h2>
+      <p>{t.legal?.contactUsDesc || 'If you have any questions about this Privacy Policy, please contact us at'}: <a href={`mailto:${supportEmail}`}>{supportEmail}</a></p>
+    </div>
+  </section>
+</BaseLayout>

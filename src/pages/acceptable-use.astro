@@ -1,0 +1,123 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import SEO from '../components/SEO.astro';
+import { generateBreadcrumbSchema } from '../utils/schema';
+
+const [serviceInfoEntries] = await Promise.all([
+  getCollection('service-info'),
+]);
+const serviceInfo = serviceInfoEntries[0];
+const data = serviceInfo?.data || {};
+
+const brandName = data.brandName || 'IPTV Service';
+const baseUrl = data.siteUrl || Astro.url.origin;
+const supportEmail = data.supportEmail || 'streamonlinever@gmail.com';
+
+const breadcrumbSchema = generateBreadcrumbSchema([
+  { name: 'Home', url: baseUrl },
+  { name: 'Acceptable Use Policy', url: `${baseUrl}/acceptable-use` },
+]);
+---
+
+<BaseLayout>
+  <SEO
+    slot="head"
+    title={`Acceptable Use Policy - ${brandName}`}
+    description={`Acceptable Use Policy for ${brandName}. Guidelines for appropriate use of our IPTV streaming services.`}
+    canonicalURL={`${baseUrl}/acceptable-use`}
+    schema={[breadcrumbSchema]}
+  />
+
+  <div class="container mx-auto px-4 py-12 max-w-4xl">
+    <h1 class="text-4xl font-bold mb-8">Acceptable Use Policy</h1>
+    
+    <div class="prose prose-lg dark:prose-invert max-w-none">
+      <p class="text-muted-foreground">Last updated: {new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</p>
+      
+      <h2>1. Purpose</h2>
+      <p>
+        This Acceptable Use Policy ("AUP") outlines the acceptable use of {brandName}'s IPTV services. 
+        By using our services, you agree to comply with this policy. Violation of this policy may result 
+        in suspension or termination of your account.
+      </p>
+
+      <h2>2. Permitted Use</h2>
+      <p>Our services are provided for:</p>
+      <ul>
+        <li>Personal, non-commercial entertainment purposes</li>
+        <li>Viewing on devices you own or control</li>
+        <li>Use within your household</li>
+        <li>Legal consumption of streaming content</li>
+      </ul>
+
+      <h2>3. Prohibited Activities</h2>
+      <p>You agree NOT to:</p>
+      <ul>
+        <li><strong>Share your credentials:</strong> Share, sell, or distribute your login information to others</li>
+        <li><strong>Redistribute content:</strong> Copy, record, redistribute, or rebroadcast any content from our service</li>
+        <li><strong>Commercial use:</strong> Use our service for commercial or public display purposes (bars, hotels, etc.) without authorization</li>
+        <li><strong>Circumvent security:</strong> Attempt to bypass, disable, or circumvent any security features</li>
+        <li><strong>Reverse engineer:</strong> Decompile, reverse engineer, or attempt to extract source code</li>
+        <li><strong>Illegal activities:</strong> Use our service for any illegal purpose or to access illegal content</li>
+        <li><strong>Harmful actions:</strong> Transmit viruses, malware, or engage in any activity that disrupts our service</li>
+        <li><strong>Multiple connections:</strong> Use more connections than your subscription allows</li>
+        <li><strong>VPN abuse:</strong> Use VPNs to access content restricted in your region (may affect service quality)</li>
+      </ul>
+
+      <h2>4. Device Limits</h2>
+      <p>
+        Your subscription includes a specific number of simultaneous connections. Using more devices 
+        than your plan allows may result in service interruption or account suspension.
+      </p>
+
+      <h2>5. Fair Use</h2>
+      <p>
+        We reserve the right to limit or throttle accounts that exhibit unusual usage patterns that 
+        may indicate violation of this policy or that negatively impact our service for other users.
+      </p>
+
+      <h2>6. Intellectual Property</h2>
+      <p>
+        All content provided through our service is protected by copyright and other intellectual property 
+        rights. You acknowledge that you do not acquire any ownership rights by using our service.
+      </p>
+      <p>
+        <em>Disclaimer: {brandName} is not affiliated with any content providers or networks. All trademarks, 
+        logos, and brand names are the property of their respective owners. Users are responsible for 
+        ensuring their use complies with local laws and regulations.</em>
+      </p>
+
+      <h2>7. Monitoring and Enforcement</h2>
+      <p>
+        We reserve the right to monitor usage patterns to ensure compliance with this policy. If we detect 
+        violations, we may:
+      </p>
+      <ul>
+        <li>Issue a warning</li>
+        <li>Temporarily suspend your account</li>
+        <li>Permanently terminate your account without refund</li>
+        <li>Report illegal activities to appropriate authorities</li>
+      </ul>
+
+      <h2>8. Reporting Violations</h2>
+      <p>
+        If you become aware of any violation of this policy, please report it to us at{' '}
+        <a href={`mailto:${supportEmail}`}>{supportEmail}</a>.
+      </p>
+
+      <h2>9. Changes to This Policy</h2>
+      <p>
+        We may update this Acceptable Use Policy from time to time. We will notify users of significant 
+        changes via email or through our website. Continued use of our services after changes indicates 
+        acceptance of the updated policy.
+      </p>
+
+      <h2>10. Contact Information</h2>
+      <p>
+        If you have questions about this policy, please contact us at{' '}
+        <a href={`mailto:${supportEmail}`}>{supportEmail}</a>.
+      </p>
+    </div>
+  </div>
+</BaseLayout>

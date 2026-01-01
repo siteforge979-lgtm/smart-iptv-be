@@ -1,0 +1,143 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import SEO from '../../components/SEO.astro';
+import { generateBreadcrumbSchema } from '../../utils/schema';
+
+export async function getStaticPaths() {
+  const apps = await getCollection('apps').catch(() => []);
+  return apps.map(app => ({
+    params: { slug: app.id },
+    props: { app },
+  }));
+}
+
+interface Props {
+  app: any;
+}
+
+const { app } = Astro.props;
+const serviceInfoEntries = await getCollection('service-info');
+const serviceInfo = serviceInfoEntries[0];
+const data = serviceInfo?.data || {};
+const baseUrl = data.siteUrl || Astro.url.origin;
+
+const breadcrumbs = [
+  { name: 'Home', url: '/' },
+  { name: 'Apps', url: '/apps' },
+  { name: app.data.name, url: `/apps/${app.id}` },
+];
+
+const breadcrumbSchema = generateBreadcrumbSchema(
+  breadcrumbs.map(b => ({ ...b, url: `${baseUrl}${b.url}` }))
+);
+
+const appSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'SoftwareApplication',
+  name: app.data.name,
+  description: app.data.description,
+  applicationCategory: 'MultimediaApplication',
+  operatingSystem: app.data.platforms?.join(', ') || 'Multiple',
+};
+---
+
+<BaseLayout>
+  <SEO
+    slot="head"
+    title={`${app.data.name} - Best IPTV App`}
+    description={app.data.description}
+    canonicalURL={`${baseUrl}/apps/${app.id}`}
+    schema={[breadcrumbSchema, appSchema]}
+    pageType="guide"
+    breadcrumbs={breadcrumbs}
+  />
+
+  <div class="max-w-4xl mx-auto px-4 py-12">
+    <nav class="mb-8">
+      <ol class="flex items-center gap-2 text-sm text-muted-foreground">
+        {breadcrumbs.map((crumb, i) => (
+          <>
+            {i > 0 && <span>/</span>}
+            <li>
+              {i < breadcrumbs.length - 1 ? (
+                <a href={crumb.url} class="hover:text-primary transition-colors">{crumb.name}</a>
+              ) : (
+                <span class="text-foreground font-medium">{crumb.name}</span>
+              )}
+            </li>
+          </>
+        ))}
+      </ol>
+    </nav>
+
+    <header class="mb-8">
+      <h1 class="text-4xl font-bold mb-4">{app.data.name}</h1>
+      <p class="text-xl text-muted-foreground">{app.data.description}</p>
+      
+      {app.data.platforms && app.data.platforms.length > 0 && (
+        <div class="flex flex-wrap gap-2 mt-4">
+          {app.data.platforms.map((platform: string) => (
+            <span class="px-3 py-1 bg-muted rounded-full text-sm">{platform}</span>
+          ))}
+        </div>
+      )}
+    </header>
+
+    <div class="prose prose-lg dark:prose-invert max-w-none">
+      <h2>About {app.data.name}</h2>
+      <p>
+        {app.data.name} is one of the best IPTV player apps available. It's fully compatible with 
+        {data.brandName} and provides an excellent streaming experience.
+      </p>
+
+      <h2>Key Features</h2>
+      <ul>
+        <li>Easy M3U and Xtream Codes support</li>
+        <li>EPG (Electronic Program Guide) integration</li>
+        <li>Favorites and playlist management</li>
+        <li>Multi-screen support</li>
+        <li>Regular updates and improvements</li>
+      </ul>
+
+      <h2>How to Use with {data.brandName}</h2>
+      <ol>
+        <li>Download and install {app.data.name} on your device</li>
+        <li>Open the app and go to settings</li>
+        <li>Enter your M3U URL or Xtream Codes</li>
+        <li>Wait for channels to load</li>
+        <li>Start enjoying your IPTV content</li>
+      </ol>
+
+      {app.data.downloadLinks && Object.keys(app.data.downloadLinks).length > 0 && (
+        <>
+          <h2>Download Links</h2>
+          <div class="not-prose flex flex-wrap gap-4">
+            {Object.entries(app.data.downloadLinks).map(([platform, link]) => (
+              <a
+                href={link as string}
+                target="_blank"
+                rel="noopener noreferrer"
+                class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-muted hover:bg-muted/80 transition-colors"
+              >
+                {platform}
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                </svg>
+              </a>
+            ))}
+          </div>
+        </>
+      )}
+
+      <div class="not-prose mt-8">
+        <a 
+          href="/pricing" 
+          class="inline-flex items-center justify-center px-6 py-3 rounded-lg bg-primary text-primary-foreground font-semibold hover:opacity-90 transition-opacity"
+        >
+          Get Your Subscription
+        </a>
+      </div>
+    </div>
+  </div>
+</BaseLayout>

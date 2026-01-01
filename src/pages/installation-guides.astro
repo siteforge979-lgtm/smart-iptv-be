@@ -1,0 +1,28 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import InstallationGuides from '../components/InstallationGuides.tsx';
+
+const serviceInfo = {
+  brandName: "smart--iptv.be",
+  primaryColor: "#3b82f6",
+  supportEmail: "streamonlinever@gmail.com",
+  whatsappNumber: "",
+  telegramUsername: "",
+};
+
+const seoData = {
+  title: `Installation Guides - Setup ${serviceInfo.brandName} on Any Device`,
+  description: `Step-by-step installation guides for ${serviceInfo.brandName} IPTV. Setup instructions for Firestick, Android, Smart TV, iOS, Windows, Mac, MAG devices, and more. Start streaming in minutes!`,
+};
+---
+
+<BaseLayout title={seoData.title} description={seoData.description}>
+  <InstallationGuides 
+    client:load
+    brandName={serviceInfo.brandName}
+    primaryColor={serviceInfo.primaryColor}
+    supportEmail={serviceInfo.supportEmail}
+    whatsappNumber={serviceInfo.whatsappNumber}
+    telegramUsername={serviceInfo.telegramUsername}
+  />
+</BaseLayout>

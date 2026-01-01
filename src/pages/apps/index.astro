@@ -1,0 +1,115 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import SEO from '../../components/SEO.astro';
+import { generateBreadcrumbSchema } from '../../utils/schema';
+import { LANGUAGES, getUITranslations, defaultLanguage, type LanguageCode } from '../../utils/i18n';
+
+const currentLang = defaultLanguage as LanguageCode;
+const t = getUITranslations(currentLang);
+
+const [apps, serviceInfoEntries] = await Promise.all([
+  getCollection('apps').catch(() => []),
+  getCollection('service-info'),
+]);
+
+const serviceInfo = serviceInfoEntries[0];
+const data = serviceInfo?.data || {};
+const baseUrl = data.siteUrl || Astro.url.origin;
+
+const breadcrumbs = [
+  { name: t.nav.home || 'Home', url: '/' },
+  { name: t.nav.apps || 'IPTV Apps', url: '/apps' },
+];
+
+const breadcrumbSchema = generateBreadcrumbSchema(
+  breadcrumbs.map(b => ({ ...b, url: `${baseUrl}${b.url}` }))
+);
+
+const sortedApps = apps.sort((a: any, b: any) => {
+  if (a.data.featured && !b.data.featured) return -1;
+  if (!a.data.featured && b.data.featured) return 1;
+  return (a.data.order || 0) - (b.data.order || 0);
+});
+---
+
+<BaseLayout currentLang={currentLang}>
+  <SEO
+    slot="head"
+    title={`${t.apps?.title || 'Best IPTV Apps'} - ${data.brandName}`}
+    description={t.apps?.metaDesc?.replace('{brand}', data.brandName) || `Discover the best IPTV apps compatible with ${data.brandName}.`}
+    canonicalURL={`${baseUrl}/apps`}
+    schema={[breadcrumbSchema]}
+    pageType="guide"
+    breadcrumbs={breadcrumbs}
+    languages={Object.fromEntries(
+      Object.keys(LANGUAGES)
+        .filter(l => l !== currentLang)
+        .map(l => [l, `${baseUrl}/${l}/apps`])
+    )}
+  />
+
+  <div class="max-w-6xl mx-auto px-4 py-12">
+    <nav class="mb-8">
+      <ol class="flex items-center gap-2 text-sm text-muted-foreground">
+        {breadcrumbs.map((crumb, i) => (
+          <>
+            {i > 0 && <span>/</span>}
+            <li>
+              {i < breadcrumbs.length - 1 ? (
+                <a href={crumb.url} class="hover:text-primary transition-colors">{crumb.name}</a>
+              ) : (
+                <span class="text-foreground font-medium">{crumb.name}</span>
+              )}
+            </li>
+          </>
+        ))}
+      </ol>
+    </nav>
+
+    <header class="text-center mb-12">
+      <h1 class="text-4xl font-bold mb-4">Best IPTV Apps</h1>
+      <p class="text-xl text-muted-foreground max-w-2xl mx-auto">
+        These are the best IPTV player apps that work perfectly with {data.brandName}. 
+        Choose the one that fits your device and preferences.
+      </p>
+    </header>
+
+    <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {sortedApps.map((app: any) => (
+        <a
+          href={`/apps/${app.id}`}
+          class="group block p-6 rounded-lg border border-border hover:border-primary transition-all hover:shadow-lg relative"
+        >
+          {app.data.featured && (
+            <span class="absolute -top-3 right-4 px-3 py-1 bg-primary text-primary-foreground text-xs font-semibold rounded-full">
+              Recommended
+            </span>
+          )}
+          <h2 class="text-xl font-semibold mb-2 group-hover:text-primary transition-colors">
+            {app.data.name}
+          </h2>
+          <p class="text-muted-foreground text-sm mb-4 line-clamp-2">
+            {app.data.description}
+          </p>
+          {app.data.platforms && app.data.platforms.length > 0 && (
+            <div class="flex flex-wrap gap-1">
+              {app.data.platforms.slice(0, 3).map((platform: string) => (
+                <span class="px-2 py-0.5 bg-muted rounded text-xs">{platform}</span>
+              ))}
+              {app.data.platforms.length > 3 && (
+                <span class="px-2 py-0.5 bg-muted rounded text-xs">+{app.data.platforms.length - 3}</span>
+              )}
+            </div>
+          )}
+        </a>
+      ))}
+    </div>
+
+    {apps.length === 0 && (
+      <div class="text-center py-12">
+        <p class="text-muted-foreground">App guides coming soon!</p>
+      </div>
+    )}
+  </div>
+</BaseLayout>

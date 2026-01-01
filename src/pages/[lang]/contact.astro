@@ -1,0 +1,121 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import SEO from '../../components/SEO.astro';
+import { generateBreadcrumbSchema } from '../../utils/schema';
+import { LANGUAGES, getUITranslations, defaultLanguage, type LanguageCode } from '../../utils/i18n';
+
+export const prerender = true;
+
+export async function getStaticPaths() {
+  const langs = Object.keys(LANGUAGES).filter(lang => lang !== defaultLanguage);
+  return langs.map(lang => ({
+    params: { lang },
+  }));
+}
+
+const { lang } = Astro.params;
+const currentLang = (lang || defaultLanguage) as LanguageCode;
+const t = getUITranslations(currentLang);
+
+const serviceInfoEntries = await getCollection('service-info');
+const serviceInfo = serviceInfoEntries[0];
+const data = serviceInfo?.data || {};
+const baseUrl = data.siteUrl || Astro.url.origin;
+
+const contactInfo = data.contactInfo || {};
+const whatsappNumber = contactInfo.whatsappNumber || '';
+const telegramUsername = contactInfo.telegramUsername || '';
+const supportEmail = data.supportEmail || 'streamonlinever@gmail.com';
+
+const breadcrumbSchema = generateBreadcrumbSchema([
+  { name: t.nav.home || 'Home', url: baseUrl },
+  { name: t.nav.contact || 'Contact', url: `${baseUrl}/${currentLang}/contact` },
+]);
+---
+
+<BaseLayout currentLang={currentLang}>
+  <SEO
+    slot="head"
+    title={`${t.seo?.contactTitle || t.nav.contact || 'Contact Us'} - ${data.brandName}`}
+    description={t.seo?.contactDesc || `Get in touch with ${data.brandName} support team. We're here to help 24/7.`}
+    canonicalURL={`${baseUrl}/${currentLang}/contact`}
+    schema={[breadcrumbSchema]}
+    languages={Object.fromEntries(
+      Object.keys(LANGUAGES)
+        .filter(l => l !== currentLang)
+        .map(l => [l, l === defaultLanguage ? `${baseUrl}/contact` : `${baseUrl}/${l}/contact`])
+    )}
+  />
+
+  <section class="py-20 bg-gradient-to-b from-background to-muted/30">
+    <div class="container mx-auto px-4 text-center">
+      <h1 class="text-4xl md:text-5xl font-bold mb-4">
+        {t.contact?.pageTitle || `Contact ${data.brandName}`}
+      </h1>
+      <p class="text-xl text-muted-foreground max-w-2xl mx-auto">
+        {t.contact?.pageSubtitle || 'We\'re here to help! Get in touch with our support team.'}
+      </p>
+    </div>
+  </section>
+
+  <section class="py-16">
+    <div class="container mx-auto px-4">
+      <div class="grid md:grid-cols-3 gap-8 max-w-4xl mx-auto">
+        {whatsappNumber && (
+          <a
+            href={`https://wa.me/${whatsappNumber.replace(/\D/g, '')}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            class="flex flex-col items-center p-8 rounded-xl bg-card border border-border hover:border-primary/50 transition-colors"
+          >
+            <div class="w-16 h-16 rounded-full bg-[#25D366]/10 flex items-center justify-center mb-4">
+              <svg class="w-8 h-8 text-[#25D366]" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+              </svg>
+            </div>
+            <h3 class="text-lg font-semibold mb-2">WhatsApp</h3>
+            <p class="text-muted-foreground text-center text-sm">{t.contact?.whatsappDesc || 'Chat with us instantly'}</p>
+          </a>
+        )}
+
+        {telegramUsername && (
+          <a
+            href={`https://t.me/${telegramUsername.replace(/^@/, '')}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            class="flex flex-col items-center p-8 rounded-xl bg-card border border-border hover:border-primary/50 transition-colors"
+          >
+            <div class="w-16 h-16 rounded-full bg-[#0088cc]/10 flex items-center justify-center mb-4">
+              <svg class="w-8 h-8 text-[#0088cc]" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/>
+              </svg>
+            </div>
+            <h3 class="text-lg font-semibold mb-2">Telegram</h3>
+            <p class="text-muted-foreground text-center text-sm">{t.contact?.telegramDesc || 'Message us on Telegram'}</p>
+          </a>
+        )}
+
+        <a
+          href={`mailto:${supportEmail}`}
+          class="flex flex-col items-center p-8 rounded-xl bg-card border border-border hover:border-primary/50 transition-colors"
+        >
+          <div class="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-4">
+            <svg class="w-8 h-8 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+            </svg>
+          </div>
+          <h3 class="text-lg font-semibold mb-2">{t.contact?.email || 'Email'}</h3>
+          <p class="text-muted-foreground text-center text-sm">{supportEmail}</p>
+        </a>
+      </div>
+
+      <div class="mt-16 text-center max-w-2xl mx-auto">
+        <h2 class="text-2xl font-bold mb-4">{t.contact?.responseTime || 'Response Time'}</h2>
+        <p class="text-muted-foreground">
+          {t.contact?.responseTimeDesc || 'Our support team typically responds within 2 hours. For urgent matters, please use WhatsApp or Telegram for the fastest response.'}
+        </p>
+      </div>
+    </div>
+  </section>
+</BaseLayout>

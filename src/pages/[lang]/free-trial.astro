@@ -1,0 +1,82 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import SEO from '../../components/SEO.astro';
+import FreeTrialForm from '../../components/FreeTrialForm';
+import { generateBreadcrumbSchema } from '../../utils/schema';
+import { LANGUAGES, getUITranslations, defaultLanguage, type LanguageCode } from '../../utils/i18n';
+
+export const prerender = true;
+
+export async function getStaticPaths() {
+  const langs = Object.keys(LANGUAGES).filter(lang => lang !== defaultLanguage);
+  return langs.map(lang => ({
+    params: { lang },
+  }));
+}
+
+const { lang } = Astro.params;
+const currentLang = (lang || defaultLanguage) as LanguageCode;
+const t = getUITranslations(currentLang);
+
+const serviceInfoEntries = await getCollection('service-info');
+const serviceInfo = serviceInfoEntries[0];
+const data = serviceInfo?.data || {};
+const baseUrl = data.siteUrl || Astro.url.origin;
+
+const contactInfo = data.contactInfo || {};
+const whatsappNumber = contactInfo.whatsappNumber || '';
+const telegramUsername = contactInfo.telegramUsername || '';
+
+const breadcrumbSchema = generateBreadcrumbSchema([
+  { name: t.nav.home || 'Home', url: baseUrl },
+  { name: t.nav.freeTrial || 'Free Trial', url: `${baseUrl}/${currentLang}/free-trial` },
+]);
+---
+
+<BaseLayout currentLang={currentLang}>
+  <SEO
+    slot="head"
+    title={`${t.seo?.freeTrialTitle || t.nav.freeTrial || 'Free Trial'} - ${data.brandName}`}
+    description={t.seo?.freeTrialDesc || `Try ${data.brandName} IPTV free for 24 hours. No credit card required.`}
+    canonicalURL={`${baseUrl}/${currentLang}/free-trial`}
+    schema={[breadcrumbSchema]}
+    languages={Object.fromEntries(
+      Object.keys(LANGUAGES)
+        .filter(l => l !== currentLang)
+        .map(l => [l, l === defaultLanguage ? `${baseUrl}/free-trial` : `${baseUrl}/${l}/free-trial`])
+    )}
+  />
+
+  <section class="py-20 bg-gradient-to-b from-background to-muted/30">
+    <div class="container mx-auto px-4 text-center">
+      <h1 class="text-4xl md:text-5xl font-bold mb-4">
+        {t.freeTrial?.pageTitle || `Try ${data.brandName} Free`}
+      </h1>
+      <p class="text-xl text-muted-foreground max-w-2xl mx-auto">
+        {t.freeTrial?.pageSubtitle || 'Experience our premium IPTV service with a free 24-hour trial. No credit card required.'}
+      </p>
+    </div>
+  </section>
+
+  <section class="py-16">
+    <div class="container mx-auto px-4 max-w-lg">
+      <FreeTrialForm
+        client:load
+        brandName={data.brandName || 'IPTV Service'}
+        whatsappNumber={whatsappNumber}
+        telegramUsername={telegramUsername}
+        primaryColor={data.primaryColor}
+        translations={{
+          title: t.freeTrial?.formTitle,
+          subtitle: t.freeTrial?.formSubtitle,
+          nameLabel: t.freeTrial?.nameLabel,
+          emailLabel: t.freeTrial?.emailLabel,
+          deviceLabel: t.freeTrial?.deviceLabel,
+          submitButton: t.freeTrial?.submitButton,
+          successMessage: t.freeTrial?.successMessage,
+        }}
+      />
+    </div>
+  </section>
+</BaseLayout>

@@ -1,0 +1,59 @@
+[
+  {
+    "id": "main",
+    "brandName": "smart--iptv.be",
+    "siteUrl": "https://smart-iptv-be.pages.dev",
+    "focusKeyword": "IPTV",
+    "country": "United States",
+    "countryCode": "US",
+    "locale": "en-US",
+    "currency": "USD",
+    "currencySymbol": "$",
+    "supportEmail": "streamonlinever@gmail.com",
+    "guaranteeDays": 7,
+    "primaryCtaText": "Get Started Now",
+    "secondaryCtaText": "Learn More",
+    "trustPoints": [
+      "24/7 Customer Support",
+      "Instant Activation",
+      "No Contract Required",
+      "7-Day Money Back Guarantee"
+    ],
+    "localContext": {
+      "popularDevices": [
+        "Smart TV",
+        "Fire Stick",
+        "Android Box",
+        "iOS",
+        "Android"
+      ],
+      "popularUseCases": [
+        "Live Sports",
+        "Movies",
+        "TV Shows",
+        "International Channels"
+      ],
+      "paymentMethods": [
+        "Credit Card",
+        "PayPal",
+        "Crypto"
+      ]
+    },
+    "channelCount": 55000,
+    "vodCount": 90000,
+    "countryCount": 100,
+    "primaryColor": "#3b82f6",
+    "secondaryColor": "#8b5cf6",
+    "templateId": "classic",
+    "defaultLanguage": "fr",
+    "enabledLanguages": [
+      "fr"
+    ],
+    "responseTime": "under 2 hours",
+    "organizationDescription": "smart--iptv.be, votre portail vers l'IPTV de nouvelle génération en Belgique. Profitez d'un streaming fluide et d'un accès illimité à vos chaînes préférées, à tout moment et sur n'importe quel appareil. Contactez-nous à streamonlinever@gmail.com.",
+    "paymentSettings": {
+      "buttonText": "Acheter Maintenant",
+      "paymentType": "whatsapp"
+    }
+  }
+]

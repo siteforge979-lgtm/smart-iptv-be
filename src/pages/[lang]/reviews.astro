@@ -1,0 +1,116 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import SEO from '../../components/SEO.astro';
+import TestimonialSection from '../../components/TestimonialSection';
+import CTASection from '../../components/CTASection';
+import { generateBreadcrumbSchema, generateReviewSchema } from '../../utils/schema';
+import { LANGUAGES, getUITranslations, defaultLanguage, type LanguageCode } from '../../utils/i18n';
+
+export const prerender = true;
+
+export async function getStaticPaths() {
+  const langs = Object.keys(LANGUAGES).filter(lang => lang !== defaultLanguage);
+  return langs.map(lang => ({
+    params: { lang },
+  }));
+}
+
+const { lang } = Astro.params;
+const currentLang = (lang || defaultLanguage) as LanguageCode;
+const t = getUITranslations(currentLang);
+
+const localizedHref = (path: string) => {
+  if (currentLang === defaultLanguage) return path;
+  const cleanPath = path === '/' ? '' : path;
+  return `/${currentLang}${cleanPath}`;
+};
+
+const [serviceInfoEntries, testimonials] = await Promise.all([
+  getCollection('service-info'),
+  getCollection('testimonials').catch(() => []),
+]);
+
+const serviceInfo = serviceInfoEntries[0];
+const data = serviceInfo?.data || {};
+const baseUrl = data.siteUrl || Astro.url.origin;
+
+const sortedTestimonials = [...testimonials].sort((a, b) => (a.data.order || 0) - (b.data.order || 0));
+
+const reviewSchema = generateReviewSchema(
+  sortedTestimonials.map(t => ({
+    author: t.data.name,
+    reviewBody: t.data.content,
+    ratingValue: t.data.rating || 5,
+    datePublished: new Date().toISOString().split('T')[0],
+  })),
+  {
+    name: `${data.brandName} IPTV`,
+    description: data.description,
+    brand: data.brandName,
+  }
+);
+
+const breadcrumbSchema = generateBreadcrumbSchema([
+  { name: t.nav.home || 'Home', url: baseUrl },
+  { name: t.nav.reviews || 'Reviews', url: `${baseUrl}/${currentLang}/reviews` },
+]);
+---
+
+<BaseLayout currentLang={currentLang}>
+  <SEO
+    slot="head"
+    title={`${t.seo?.reviewsTitle || t.nav.reviews || 'Customer Reviews'} - ${data.brandName}`}
+    description={t.seo?.reviewsDesc || `Read what customers say about ${data.brandName} IPTV service.`}
+    canonicalURL={`${baseUrl}/${currentLang}/reviews`}
+    schema={[reviewSchema, breadcrumbSchema]}
+    languages={Object.fromEntries(
+      Object.keys(LANGUAGES)
+        .filter(l => l !== currentLang)
+        .map(l => [l, l === defaultLanguage ? `${baseUrl}/reviews` : `${baseUrl}/${l}/reviews`])
+    )}
+  />
+
+  <section class="py-20 bg-gradient-to-b from-background to-muted/30">
+    <div class="container mx-auto px-4 text-center">
+      <h1 class="text-4xl md:text-5xl font-bold mb-4">
+        {t.reviews?.pageTitle || `${data.brandName} Customer Reviews`}
+      </h1>
+      <p class="text-xl text-muted-foreground max-w-2xl mx-auto">
+        {t.reviews?.pageSubtitle || 'See what our customers have to say about their experience.'}
+      </p>
+    </div>
+  </section>
+
+  {sortedTestimonials.length > 0 && (
+    <TestimonialSection
+      client:visible
+      testimonials={sortedTestimonials.map(t => ({
+        name: t.data.name,
+        location: t.data.location,
+        content: t.data.content,
+        rating: t.data.rating || 5,
+        avatar: t.data.avatar,
+        verified: true,
+      }))}
+      primaryColor={data.primaryColor}
+      showCTA={false}
+      translations={{
+        title: t.testimonials?.title,
+        subtitle: t.testimonials?.subtitle,
+        reviews: t.testimonials?.reviews,
+        verifiedPurchase: t.testimonials?.verifiedPurchase,
+        ctaButton: t.testimonials?.ctaButton,
+      }}
+    />
+  )}
+
+  <CTASection
+    client:visible
+    title={t.cta.readyToStream || 'Ready to Start Streaming?'}
+    subtitle={t.cta.joinThousands?.replace('{channels}', String(data.channelCount || 28000)) || `Join thousands of satisfied customers`}
+    buttonText={t.hero.getStarted || 'Get Started'}
+    buttonLink={localizedHref('/pricing')}
+    primaryColor={data.primaryColor}
+  />
+</BaseLayout>

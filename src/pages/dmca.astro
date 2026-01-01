@@ -1,0 +1,120 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+
+const serviceInfo = {
+  brandName: "smart--iptv.be",
+  supportEmail: "streamonlinever@gmail.com",
+  siteUrl: "https://smart-iptv-be.pages.dev",
+};
+
+const seoData = {
+  title: `DMCA Policy - ${serviceInfo.brandName}`,
+  description: `DMCA Policy and copyright infringement notification procedures for ${serviceInfo.brandName}. Learn how to report copyright violations.`,
+};
+---
+
+<BaseLayout title={seoData.title} description={seoData.description}>
+  <div class="min-h-screen bg-background py-16 md:py-24">
+    <div class="container mx-auto px-4">
+      <div class="max-w-4xl mx-auto">
+        <h1 class="text-3xl md:text-4xl font-bold mb-8">DMCA Policy</h1>
+        <p class="text-sm text-muted-foreground mb-8">Digital Millennium Copyright Act</p>
+        
+        <div class="prose prose-neutral dark:prose-invert max-w-none space-y-8">
+          <section>
+            <h2 class="text-2xl font-semibold mb-4">1. Introduction</h2>
+            <p class="text-muted-foreground leading-relaxed">
+              {serviceInfo.brandName} ("we", "us", "our") respects the intellectual property rights of others and expects its users to do the same. In accordance with the Digital Millennium Copyright Act of 1998 (DMCA), the text of which may be found on the U.S. Copyright Office website at <a href="https://www.copyright.gov/legislation/dmca.pdf" target="_blank" rel="noopener noreferrer" class="text-primary hover:underline">www.copyright.gov/legislation/dmca.pdf</a>, we will respond expeditiously to claims of copyright infringement committed using the {serviceInfo.brandName} service and/or website if such claims are reported to our Designated Copyright Agent identified below.
+            </p>
+            <p class="text-muted-foreground leading-relaxed mt-4">
+              {serviceInfo.brandName} does not host, provide, archive, store, or distribute media of any kind. We act as an index or directory of media posted by other enthusiasts on the internet, which is completely outside of our control. We respect the rights of copyright holders and are committed to addressing infringement claims.
+            </p>
+          </section>
+          
+          <section>
+            <h2 class="text-2xl font-semibold mb-4">2. Notification of Copyright Infringement</h2>
+            <p class="text-muted-foreground leading-relaxed">
+              If you are a copyright owner, authorized to act on behalf of one, or authorized to act under any exclusive right under copyright, please report alleged copyright infringements taking place on or through the Site or Service by completing the following DMCA Notice of Alleged Infringement and delivering it to our Designated Copyright Agent.
+            </p>
+            <p class="text-muted-foreground leading-relaxed mt-4">
+              Upon receipt of a DMCA Notice, we will take whatever action, in our sole discretion, we deem appropriate, including removal of the challenged content from the Service listings or disabling access to it.
+            </p>
+          </section>
+          
+          <section>
+            <h2 class="text-2xl font-semibold mb-4">3. DMCA Notice of Alleged Infringement ("Notice")</h2>
+            <p class="text-muted-foreground leading-relaxed mb-4">
+              To file a notice of infringing material on {serviceInfo.brandName}, please provide a notification containing the following details:
+            </p>
+            <ol class="list-decimal list-inside space-y-4 text-muted-foreground">
+              <li class="leading-relaxed">
+                <strong class="text-foreground">Identify the copyrighted work</strong> that you claim has been infringed, or if multiple copyrighted works are covered by this Notice, you may provide a representative list of the copyrighted works that you claim have been infringed.
+              </li>
+              <li class="leading-relaxed">
+                <strong class="text-foreground">Identify the material or link</strong> you claim is infringing (or the subject of infringing activity) and to which access is to be disabled, including at a minimum, if applicable, the URL of the link shown on the Site or the exact location where such material may be found.
+              </li>
+              <li class="leading-relaxed">
+                <strong class="text-foreground">Provide your contact information:</strong> company affiliation (if applicable), mailing address, telephone number, and email address.
+              </li>
+              <li class="leading-relaxed">
+                <strong class="text-foreground">Include both of the following statements</strong> in the body of the Notice:
+                <ul class="list-disc list-inside ml-4 mt-2 space-y-2">
+                  <li>"I hereby state that I have a good faith belief that the disputed use of the copyrighted material is not authorized by the copyright owner, its agent, or the law (e.g., as a fair use)."</li>
+                  <li>"I hereby state that the information in this Notice is accurate and, under penalty of perjury, that I am the owner, or authorized to act on behalf of the owner, of the copyright or of an exclusive right under the copyright that is allegedly infringed."</li>
+                </ul>
+              </li>
+              <li class="leading-relaxed">
+                <strong class="text-foreground">Provide your full legal name</strong> and your electronic or physical signature.
+              </li>
+            </ol>
+            
+            <div class="mt-6 p-6 rounded-xl bg-card border border-border">
+              <h3 class="font-semibold mb-3">Designated Copyright Agent:</h3>
+              <p class="text-muted-foreground">
+                Legal Department - Copyright Claims<br/>
+                {serviceInfo.brandName}<br/>
+                Email: <a href={`mailto:${serviceInfo.supportEmail}?subject=DMCA%20Notice`} class="text-primary hover:underline">{serviceInfo.supportEmail}</a>
+              </p>
+            </div>
+          </section>
+          
+          <section>
+            <h2 class="text-2xl font-semibold mb-4">4. Counter-Notification Procedures</h2>
+            <p class="text-muted-foreground leading-relaxed mb-4">
+              If you believe that material you posted on the site was removed or access to it was disabled by mistake or misidentification, you may file a counter-notification with us (a "Counter-Notice") by submitting written notification to our copyright agent. The Counter-Notice must include:
+            </p>
+            <ol class="list-decimal list-inside space-y-3 text-muted-foreground">
+              <li>Your physical or electronic signature.</li>
+              <li>An identification of the material that has been removed or to which access has been disabled and the location at which the material appeared before it was removed or access disabled.</li>
+              <li>A statement under penalty of perjury that you have a good faith belief that the material was removed or disabled as a result of mistake or misidentification.</li>
+              <li>Your name, address, telephone number, email address, and a statement that you consent to the jurisdiction of the Federal Court for the judicial district in which your address is located.</li>
+            </ol>
+          </section>
+          
+          <section>
+            <h2 class="text-2xl font-semibold mb-4">5. Repeat Infringers</h2>
+            <p class="text-muted-foreground leading-relaxed">
+              It is our policy in appropriate circumstances to disable and/or terminate the accounts of users who are repeat infringers.
+            </p>
+          </section>
+          
+          <section>
+            <h2 class="text-2xl font-semibold mb-4">6. Disclaimer</h2>
+            <p class="text-muted-foreground leading-relaxed">
+              Please be aware that if you knowingly materially misrepresent that material or activity on the Site is infringing your copyright, you may be held liable for damages (including costs and attorneys' fees) under Section 512(f) of the DMCA.
+            </p>
+            <p class="text-muted-foreground leading-relaxed mt-4">
+              This DMCA policy does not constitute legal advice. If you have questions about your rights or obligations under the DMCA or other applicable copyright laws, please consult with an attorney. For general information on copyright, the <a href="https://www.wipo.int/" target="_blank" rel="noopener noreferrer" class="text-primary hover:underline">World Intellectual Property Organization (WIPO)</a> is a useful resource.
+            </p>
+          </section>
+        </div>
+        
+        <div class="mt-12 pt-8 border-t border-border">
+          <p class="text-sm text-muted-foreground text-center">
+            Last updated: {new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</BaseLayout>

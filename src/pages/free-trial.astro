@@ -1,0 +1,153 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import SEO from '../components/SEO.astro';
+import TrustBadges from '../components/TrustBadges';
+import FreeTrialForm from '../components/FreeTrialForm';
+import { CheckCircle, Play, Clock, Gift, Tv, Film, Shield, Headphones, Star, ArrowRight } from 'lucide-react';
+import { generateBreadcrumbSchema } from '../utils/schema';
+
+const [serviceInfoEntries, siteConfigEntries] = await Promise.all([
+  getCollection('service-info'),
+  getCollection('site-config').catch(() => []),
+]);
+
+const serviceInfo = serviceInfoEntries[0];
+const data = serviceInfo?.data || {};
+const siteConfig = siteConfigEntries[0]?.data || {};
+const guaranteeDays = siteConfig.guaranteeDays || 30;
+const channelCount = data.channelCount || 28000;
+const vodCount = data.vodCount || 90000;
+
+const baseUrl = data.siteUrl || Astro.url.origin;
+const primaryColor = data.primaryColor || '#3b82f6';
+const brandName = data.brandName || 'Premium IPTV';
+
+const contactInfo = data.contactInfo || {};
+const whatsappNumber = contactInfo.whatsappNumber;
+const telegramUsername = contactInfo.telegramUsername;
+const supportEmail = data.supportEmail || contactInfo.supportEmail;
+
+const adminApiUrl = data.adminApiUrl || '';
+const websiteId = data.websiteId || '';
+const leadCaptureEnabled = data.leadCaptureEnabled !== false;
+
+const breadcrumbSchema = generateBreadcrumbSchema([
+  { name: 'Home', url: baseUrl },
+  { name: 'Free Trial', url: `${baseUrl}/free-trial` },
+]);
+
+const features = [
+  { icon: 'Tv', text: `Access to all ${channelCount.toLocaleString()}+ live channels` },
+  { icon: 'Film', text: `${vodCount.toLocaleString()}+ movies and series on demand` },
+  { icon: 'Star', text: 'Full HD & 4K streaming quality' },
+  { icon: 'Clock', text: '24-hour full access trial' },
+  { icon: 'Shield', text: 'No credit card required' },
+  { icon: 'Headphones', text: '24/7 customer support' },
+];
+
+const steps = [
+  { number: 1, title: 'Contact Us', description: 'Send us a message via WhatsApp or Telegram' },
+  { number: 2, title: 'Get Your Credentials', description: 'Receive your trial login details within minutes' },
+  { number: 3, title: 'Start Watching', description: 'Enjoy 24 hours of premium IPTV content' },
+];
+---
+
+<BaseLayout>
+  <SEO
+    slot="head"
+    title={`Free Trial - ${brandName} | Try ${channelCount.toLocaleString()}+ Channels Free`}
+    description={`Request your FREE 24-hour trial of ${brandName}. Access ${channelCount.toLocaleString()}+ live channels, ${vodCount.toLocaleString()}+ movies and series. No credit card required!`}
+    canonicalURL={`${baseUrl}/free-trial`}
+    ogImage={`${baseUrl}/og-image.jpg`}
+    schema={[breadcrumbSchema]}
+    pageType="landing"
+  />
+
+  <section class="py-20 bg-gradient-to-br from-background via-background to-muted/30">
+    <div class="container mx-auto px-4">
+      <div class="max-w-4xl mx-auto">
+        <div class="text-center mb-12">
+          <div 
+            class="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold mb-6"
+            style={`background-color: ${primaryColor}20; color: ${primaryColor}`}
+          >
+            <Gift className="w-5 h-5" />
+            <span>100% FREE - No Credit Card Required</span>
+          </div>
+          
+          <h1 class="text-4xl md:text-5xl font-bold mb-6">
+            Try <span style={`color: ${primaryColor}`}>{brandName}</span> Free for 24 Hours
+          </h1>
+          
+          <p class="text-xl text-muted-foreground max-w-2xl mx-auto">
+            Experience the full power of our premium IPTV service with no obligation. 
+            See why thousands of customers choose us as their streaming provider!
+          </p>
+        </div>
+
+        <div class="grid md:grid-cols-2 gap-8 mb-12">
+          <div class="bg-card border border-border rounded-2xl p-8">
+            <h2 class="text-2xl font-bold mb-6">What's Included in Your Trial</h2>
+            
+            <ul class="space-y-4">
+              {features.map((feature) => (
+                <li class="flex items-center gap-3">
+                  <CheckCircle className="w-5 h-5 flex-shrink-0" style={{ color: primaryColor }} />
+                  <span class="text-foreground">{feature.text}</span>
+                </li>
+              ))}
+            </ul>
+
+            <div class="mt-8 p-4 rounded-lg bg-muted/50 border border-border">
+              <div class="flex items-center gap-3 mb-2">
+                <Shield className="w-5 h-5" style={{ color: primaryColor }} />
+                <span class="font-semibold">Risk-Free Guarantee</span>
+              </div>
+              <p class="text-sm text-muted-foreground">
+                No credit card required. No hidden fees. Just 24 hours of premium entertainment.
+              </p>
+            </div>
+          </div>
+
+          <FreeTrialForm
+            client:load
+            brandName={brandName}
+            primaryColor={primaryColor}
+            contactInfo={{ whatsappNumber, telegramUsername, supportEmail }}
+            leadCaptureEnabled={leadCaptureEnabled}
+            adminApiUrl={adminApiUrl}
+            websiteId={websiteId}
+          />
+        </div>
+
+        <TrustBadges 
+          client:visible 
+          primaryColor={primaryColor} 
+          variant="grid"
+          guaranteeDays={guaranteeDays}
+        />
+      </div>
+    </div>
+  </section>
+
+  <section class="py-16 bg-muted/30">
+    <div class="container mx-auto px-4 text-center">
+      <h2 class="text-2xl md:text-3xl font-bold mb-4">
+        Ready to Upgrade After Your Trial?
+      </h2>
+      <p class="text-muted-foreground max-w-2xl mx-auto mb-8">
+        If you love our service (and we're confident you will), 
+        check out our affordable subscription plans with a {guaranteeDays}-day money-back guarantee.
+      </p>
+      <a
+        href="/pricing"
+        class="inline-flex items-center gap-2 px-8 py-4 rounded-lg text-white font-semibold transition-all hover:scale-105"
+        style={`background-color: ${primaryColor}`}
+      >
+        View Pricing Plans
+        <ArrowRight className="w-5 h-5" />
+      </a>
+    </div>
+  </section>
+</BaseLayout>

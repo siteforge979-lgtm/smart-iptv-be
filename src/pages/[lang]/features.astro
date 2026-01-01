@@ -1,0 +1,129 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import SEO from '../../components/SEO.astro';
+import FeatureGrid from '../../components/FeatureGrid';
+import CTASection from '../../components/CTASection';
+import { generateBreadcrumbSchema } from '../../utils/schema';
+import { LANGUAGES, getUITranslations, defaultLanguage, type LanguageCode } from '../../utils/i18n';
+
+export const prerender = true;
+
+export async function getStaticPaths() {
+  const langs = Object.keys(LANGUAGES).filter(lang => lang !== defaultLanguage);
+  return langs.map(lang => ({
+    params: { lang },
+  }));
+}
+
+const { lang } = Astro.params;
+const currentLang = (lang || defaultLanguage) as LanguageCode;
+const t = getUITranslations(currentLang);
+
+const serviceInfoEntries = await getCollection('service-info');
+const serviceInfo = serviceInfoEntries[0];
+const data = serviceInfo?.data || {};
+const baseUrl = data.siteUrl || Astro.url.origin;
+
+const localizedHref = (path: string) => {
+  if (currentLang === defaultLanguage) return path;
+  const cleanPath = path === '/' ? '' : path;
+  return `/${currentLang}${cleanPath}`;
+};
+
+const breadcrumbSchema = generateBreadcrumbSchema([
+  { name: t.nav.home || 'Home', url: baseUrl },
+  { name: t.nav.features || 'Features', url: `${baseUrl}/${currentLang}/features` },
+]);
+
+const defaultFeatures = data.features || [
+  { title: t.features?.hdQuality || 'HD & 4K Quality', description: t.features?.hdQualityDesc || 'Crystal clear streaming in up to 4K resolution for supported channels and content.', icon: 'tv' },
+  { title: t.features?.massiveLibrary || 'Massive Content Library', description: t.features?.massiveLibraryDesc || 'Access thousands of live channels and on-demand movies from around the world.', icon: 'film' },
+  { title: t.features?.globalCoverage || 'Global Coverage', description: t.features?.globalCoverageDesc || 'Channels and content from multiple countries and in multiple languages.', icon: 'globe' },
+  { title: t.features?.secure || 'Secure & Private', description: t.features?.secureDesc || 'Your streaming activity is protected with enterprise-grade security.', icon: 'shield' },
+  { title: t.features?.fast || 'Fast & Reliable', description: t.features?.fastDesc || 'Optimized servers ensure buffer-free streaming experience 24/7.', icon: 'zap' },
+  { title: t.features?.multiDevice || 'Multi-Device Support', description: t.features?.multiDeviceDesc || 'Watch on Smart TV, mobile, tablet, or any device with our app.', icon: 'smartphone' },
+];
+---
+
+<BaseLayout currentLang={currentLang}>
+  <SEO
+    slot="head"
+    title={`${t.seo?.featuresTitle || t.features?.title || t.nav.features || 'Features'} - ${data.brandName}`}
+    description={t.seo?.featuresDesc?.replace('{channels}', String(data.channelCount || 28000)) || `Discover premium IPTV features of ${data.brandName}.`}
+    canonicalURL={`${baseUrl}/${currentLang}/features`}
+    schema={[breadcrumbSchema]}
+    languages={Object.fromEntries(
+      Object.keys(LANGUAGES)
+        .filter(l => l !== currentLang)
+        .map(l => [l, l === defaultLanguage ? `${baseUrl}/features` : `${baseUrl}/${l}/features`])
+    )}
+  />
+
+  <section class="py-20 bg-gradient-to-b from-background to-muted/30">
+    <div class="container mx-auto px-4 text-center">
+      <h1 class="text-4xl md:text-5xl font-bold mb-4">
+        {t.features?.pageTitle || `${data.brandName} IPTV Features`}
+      </h1>
+      <p class="text-xl text-muted-foreground max-w-2xl mx-auto">
+        {t.features?.pageSubtitle || 'Everything you need for the ultimate streaming experience, all in one subscription.'}
+      </p>
+    </div>
+  </section>
+
+  <FeatureGrid client:visible features={defaultFeatures} primaryColor={data.primaryColor} />
+
+  <section class="py-20">
+    <div class="container mx-auto px-4">
+      <div class="grid lg:grid-cols-2 gap-16 items-center">
+        <div>
+          <h2 class="text-3xl font-bold mb-6">{t.features?.streamAnywhere || `Stream ${data.brandName} IPTV Anywhere`}</h2>
+          <p class="text-muted-foreground mb-6">
+            {t.features?.deviceCompatibility || 'Our service is compatible with all major devices and platforms. Whether you\'re at home on your smart TV or on the go with your mobile device, your entertainment follows you everywhere.'}
+          </p>
+          <ul class="space-y-4">
+            <li class="flex items-center gap-3">
+              <svg class="h-5 w-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+              </svg>
+              <span>{t.features?.smartTVs || 'Smart TVs (Samsung, LG, Android TV)'}</span>
+            </li>
+            <li class="flex items-center gap-3">
+              <svg class="h-5 w-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+              </svg>
+              <span>{t.features?.mobileDevices || 'iOS and Android mobile devices'}</span>
+            </li>
+            <li class="flex items-center gap-3">
+              <svg class="h-5 w-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+              </svg>
+              <span>{t.features?.fireTV || 'Amazon Fire TV and Firestick'}</span>
+            </li>
+            <li class="flex items-center gap-3">
+              <svg class="h-5 w-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+              </svg>
+              <span>{t.features?.computers || 'Windows, Mac, and Linux computers'}</span>
+            </li>
+          </ul>
+        </div>
+        <div class="bg-muted/50 rounded-2xl p-8 text-center">
+          <div class="text-6xl font-bold text-gradient mb-4">{data.channelCount || 28000}+</div>
+          <div class="text-xl text-muted-foreground mb-8">{t.common?.liveChannels || 'Live Channels'}</div>
+          <div class="text-6xl font-bold text-gradient mb-4">{data.vodCount || 90000}+</div>
+          <div class="text-xl text-muted-foreground">{t.common?.moviesAndSeries || 'Movies & Series'}</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <CTASection
+    client:visible
+    title={t.cta.readyToStream || 'Ready to Start Streaming?'}
+    subtitle={t.cta.joinThousands?.replace('{channels}', String(data.channelCount || 28000)) || `Join thousands of satisfied customers`}
+    buttonText={t.hero.getStarted || 'Get Started'}
+    buttonLink={localizedHref('/pricing')}
+    primaryColor={data.primaryColor}
+  />
+</BaseLayout>

@@ -1,0 +1,131 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import SEO from '../../../components/SEO.astro';
+import { generateBreadcrumbSchema } from '../../../utils/schema';
+import { LANGUAGES, getUITranslations, defaultLanguage, type LanguageCode } from '../../../utils/i18n';
+
+export const prerender = true;
+
+export async function getStaticPaths() {
+  const langs = Object.keys(LANGUAGES).filter(lang => lang !== defaultLanguage);
+  return langs.map(lang => ({
+    params: { lang },
+  }));
+}
+
+const { lang } = Astro.params;
+const currentLang = (lang || defaultLanguage) as LanguageCode;
+const t = getUITranslations(currentLang);
+
+const localizedHref = (path: string) => {
+  if (currentLang === defaultLanguage) return path;
+  const cleanPath = path === '/' ? '' : path;
+  return `/${currentLang}${cleanPath}`;
+};
+
+const [services, serviceInfoEntries] = await Promise.all([
+  getCollection('iptv-services').catch(() => []),
+  getCollection('service-info'),
+]);
+
+const serviceInfo = serviceInfoEntries[0];
+const data = serviceInfo?.data || {};
+const baseUrl = data.siteUrl || Astro.url.origin;
+
+const breadcrumbs = [
+  { name: t.nav.home || 'Home', url: localizedHref('/') },
+  { name: t.iptv?.title || 'IPTV Services', url: localizedHref('/iptv') },
+];
+
+const breadcrumbSchema = generateBreadcrumbSchema(
+  breadcrumbs.map(b => ({ ...b, url: `${baseUrl}${b.url}` }))
+);
+
+const sortedServices = [...services].sort((a: any, b: any) => {
+  if (a.data.featured && !b.data.featured) return -1;
+  if (!a.data.featured && b.data.featured) return 1;
+  return (b.data.rating || 0) - (a.data.rating || 0);
+});
+---
+
+<BaseLayout currentLang={currentLang}>
+  <SEO
+    slot="head"
+    title={`${t.iptv?.title || 'Best IPTV Services'} ${new Date().getFullYear()}`}
+    description={t.iptv?.metaDesc || 'Compare the best IPTV services available today.'}
+    canonicalURL={`${baseUrl}/${currentLang}/iptv`}
+    schema={[breadcrumbSchema]}
+    languages={Object.fromEntries(
+      Object.keys(LANGUAGES)
+        .filter(l => l !== currentLang)
+        .map(l => [l, l === defaultLanguage ? `${baseUrl}/iptv` : `${baseUrl}/${l}/iptv`])
+    )}
+  />
+
+  <div class="max-w-6xl mx-auto px-4 py-12">
+    <nav class="mb-8">
+      <ol class="flex items-center gap-2 text-sm text-muted-foreground">
+        {breadcrumbs.map((crumb, i) => (
+          <>
+            {i > 0 && <span>/</span>}
+            <li>
+              {i < breadcrumbs.length - 1 ? (
+                <a href={crumb.url} class="hover:text-primary transition-colors">{crumb.name}</a>
+              ) : (
+                <span class="text-foreground font-medium">{crumb.name}</span>
+              )}
+            </li>
+          </>
+        ))}
+      </ol>
+    </nav>
+
+    <header class="text-center mb-12">
+      <h1 class="text-4xl font-bold mb-4">{t.iptv?.title || 'Best IPTV Services'} {new Date().getFullYear()}</h1>
+      <p class="text-xl text-muted-foreground max-w-2xl mx-auto">
+        {t.iptv?.subtitle || 'Compare the top IPTV providers and find the best service for your needs.'}
+      </p>
+    </header>
+
+    <div class="grid gap-6">
+      {sortedServices.map((service: any, index: number) => (
+        <a
+          href={localizedHref(`/iptv/${service.id}`)}
+          class="group block p-6 rounded-lg border border-border hover:border-primary transition-all hover:shadow-lg relative"
+        >
+          <div class="flex items-start justify-between gap-4">
+            <div class="flex-1">
+              <div class="flex items-center gap-2 mb-2">
+                <span class="text-2xl font-bold text-muted-foreground">#{index + 1}</span>
+                <h2 class="text-xl font-semibold group-hover:text-primary transition-colors">
+                  {service.data.name}
+                </h2>
+                {service.data.featured && (
+                  <span class="px-2 py-0.5 bg-primary text-primary-foreground text-xs font-medium rounded">
+                    {t.common?.recommended || 'Recommended'}
+                  </span>
+                )}
+              </div>
+              <p class="text-muted-foreground mb-4">{service.data.description}</p>
+              <div class="flex items-center gap-4 text-sm">
+                <span>{service.data.channelCount || '10000'}+ {t.common?.channels || 'Channels'}</span>
+                <span class="text-muted-foreground">|</span>
+                <span>{t.iptv?.from || 'From'} ${service.data.price || '9.99'}/{t.common?.month || 'mo'}</span>
+              </div>
+            </div>
+            <div class="text-right">
+              <div class="flex items-center gap-1 mb-1">
+                <span class="text-2xl font-bold">{service.data.rating || 4.5}</span>
+                <svg class="h-6 w-6 text-yellow-400 fill-yellow-400" viewBox="0 0 24 24">
+                  <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                </svg>
+              </div>
+              <span class="text-sm text-muted-foreground">{service.data.reviewCount || 100} {t.common?.reviews || 'reviews'}</span>
+            </div>
+          </div>
+        </a>
+      ))}
+    </div>
+  </div>
+</BaseLayout>

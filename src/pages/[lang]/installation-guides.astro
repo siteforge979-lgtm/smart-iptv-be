@@ -1,0 +1,69 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import SEO from '../../components/SEO.astro';
+import InstallationGuides from '../../components/InstallationGuides';
+import { generateBreadcrumbSchema } from '../../utils/schema';
+import { LANGUAGES, getUITranslations, defaultLanguage, type LanguageCode } from '../../utils/i18n';
+
+export const prerender = true;
+
+export async function getStaticPaths() {
+  const langs = Object.keys(LANGUAGES).filter(lang => lang !== defaultLanguage);
+  return langs.map(lang => ({
+    params: { lang },
+  }));
+}
+
+const { lang } = Astro.params;
+const currentLang = (lang || defaultLanguage) as LanguageCode;
+const t = getUITranslations(currentLang);
+
+const serviceInfoEntries = await getCollection('service-info');
+const serviceInfo = serviceInfoEntries[0];
+const data = serviceInfo?.data || {};
+const baseUrl = data.siteUrl || Astro.url.origin;
+
+const breadcrumbSchema = generateBreadcrumbSchema([
+  { name: t.nav.home || 'Home', url: baseUrl },
+  { name: t.nav.setup || 'Installation Guides', url: `${baseUrl}/${currentLang}/installation-guides` },
+]);
+---
+
+<BaseLayout currentLang={currentLang}>
+  <SEO
+    slot="head"
+    title={`${t.seo?.installationTitle || t.nav.setup || 'Installation Guides'} - ${data.brandName}`}
+    description={t.seo?.installationDesc || `Step-by-step installation guides for ${data.brandName} IPTV on all devices.`}
+    canonicalURL={`${baseUrl}/${currentLang}/installation-guides`}
+    schema={[breadcrumbSchema]}
+    languages={Object.fromEntries(
+      Object.keys(LANGUAGES)
+        .filter(l => l !== currentLang)
+        .map(l => [l, l === defaultLanguage ? `${baseUrl}/installation-guides` : `${baseUrl}/${l}/installation-guides`])
+    )}
+  />
+
+  <section class="py-20 bg-gradient-to-b from-background to-muted/30">
+    <div class="container mx-auto px-4 text-center">
+      <h1 class="text-4xl md:text-5xl font-bold mb-4">
+        {t.installation?.pageTitle || `${data.brandName} Installation Guides`}
+      </h1>
+      <p class="text-xl text-muted-foreground max-w-2xl mx-auto">
+        {t.installation?.pageSubtitle || 'Easy step-by-step guides to set up IPTV on any device.'}
+      </p>
+    </div>
+  </section>
+
+  <InstallationGuides 
+    client:visible 
+    brandName={data.brandName || 'IPTV Service'}
+    primaryColor={data.primaryColor}
+    translations={{
+      title: t.installation?.title,
+      subtitle: t.installation?.subtitle,
+      selectDevice: t.installation?.selectDevice,
+      step: t.installation?.step,
+    }}
+  />
+</BaseLayout>

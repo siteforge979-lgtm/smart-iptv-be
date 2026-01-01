@@ -1,0 +1,134 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --color-primary: #3b82f6;
+  --color-primary-rgb: 59 130 246;
+  --color-primary-foreground: #ffffff;
+  --color-secondary: #8b5cf6;
+  --color-secondary-rgb: 139 92 246;
+  --color-secondary-foreground: #ffffff;
+  --color-background: #ffffff;
+  --color-foreground: #1e293b;
+  --color-muted: #f8fafc;
+  --color-muted-foreground: #64748b;
+  --color-accent: #f1f5f9;
+  --color-accent-foreground: #1e293b;
+  --color-card: #ffffff;
+  --color-card-foreground: #1e293b;
+  --color-border: #e2e8f0;
+  --color-ring: #3b82f6;
+  --hero-gradient: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 50%, #f1f5f9 100%);
+}
+
+@layer base {
+  * { @apply border-border; }
+  body { @apply bg-background text-foreground antialiased; }
+}
+
+@layer components {
+  .hero-section {
+    @apply relative overflow-hidden py-20 lg:py-28;
+    background: var(--hero-gradient);
+  }
+  
+  .hero-section::before {
+    content: '';
+    @apply absolute inset-0;
+    background-image: radial-gradient(circle at 1px 1px, rgba(0,0,0,0.04) 1px, transparent 0);
+    background-size: 32px 32px;
+  }
+  
+  .hero-title {
+    @apply text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl text-foreground text-center;
+  }
+  
+  .hero-subtitle {
+    @apply mt-6 text-lg text-muted-foreground max-w-2xl mx-auto text-center;
+  }
+  
+  .section-container { @apply py-16 lg:py-24; }
+  .section-title { @apply text-3xl font-bold text-center mb-4; }
+  .section-subtitle { @apply text-muted-foreground text-center max-w-2xl mx-auto mb-12; }
+  
+  .card-modern {
+    @apply bg-card rounded-xl border border-border p-6 shadow-sm transition-all duration-300;
+  }
+  .card-modern:hover {
+    @apply shadow-lg;
+    transform: translateY(-4px);
+  }
+  
+  .btn-primary {
+    @apply inline-flex items-center justify-center rounded-lg px-6 py-3 text-base font-semibold text-white transition-all;
+    background-color: var(--color-primary);
+  }
+  .btn-primary:hover { filter: brightness(1.1); }
+  
+  .btn-secondary {
+    @apply inline-flex items-center justify-center rounded-lg border border-border bg-white px-6 py-3 text-base font-medium transition-colors;
+  }
+  .btn-secondary:hover { @apply bg-muted; }
+  
+  .header-nav {
+    @apply sticky top-0 z-50 w-full border-b border-border bg-white/95 backdrop-blur;
+  }
+  
+  .footer-section { @apply border-t border-border bg-muted/50 py-12; }
+  
+  .pricing-card {
+    @apply bg-card rounded-xl border border-border p-8 transition-all;
+  }
+  .pricing-card.featured {
+    @apply border-2 relative shadow-lg;
+    border-color: var(--color-primary);
+  }
+  
+  .feature-icon {
+    @apply h-12 w-12 rounded-xl flex items-center justify-center;
+    background-color: color-mix(in srgb, var(--color-primary) 10%, transparent);
+  }
+  .feature-icon svg { @apply h-6 w-6; color: var(--color-primary); }
+  
+  .device-card {
+    @apply bg-white rounded-xl border border-border p-6 text-center transition-all;
+  }
+  .device-card:hover { @apply shadow-md; border-color: color-mix(in srgb, var(--color-primary) 30%, transparent); }
+  
+  .step-card {
+    @apply relative bg-white rounded-xl border border-border p-6;
+  }
+  .step-number {
+    @apply w-12 h-12 rounded-full flex items-center justify-center text-xl font-bold text-white mb-4;
+    background: var(--color-primary);
+  }
+  
+  .guarantee-badge {
+    @apply inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium;
+    background: color-mix(in srgb, var(--color-primary) 10%, transparent);
+    color: var(--color-primary);
+  }
+  
+  .content-card {
+    @apply bg-muted/50 rounded-xl p-4 overflow-hidden;
+  }
+  
+  .faq-item {
+    @apply border-b border-border py-4;
+  }
+  
+  .cta-section {
+    @apply py-16 text-center;
+    background: linear-gradient(135deg, color-mix(in srgb, var(--color-primary) 5%, white) 0%, color-mix(in srgb, var(--color-secondary) 5%, white) 100%);
+  }
+}
+
+@layer utilities {
+  .text-gradient {
+    @apply bg-clip-text text-transparent;
+    background-image: linear-gradient(135deg, var(--color-primary) 0%, var(--color-secondary) 100%);
+  }
+}
+
+html { scroll-behavior: smooth; }

@@ -1,0 +1,170 @@
+---
+import { getUITranslations, type LanguageCode } from '../utils/i18n';
+import TrialFormModal from './TrialFormModal';
+
+interface Props {
+  title: string;
+  subtitle: string;
+  channelCount: number;
+  vodCount: number;
+  primaryColor?: string;
+  showFreeTrial?: boolean;
+  whatsappNumber?: string;
+  trialHours?: number;
+  trialPrice?: number;
+  currentLang?: string;
+}
+
+const {
+  title,
+  subtitle,
+  channelCount,
+  vodCount,
+  primaryColor = '#3b82f6',
+  showFreeTrial = true,
+  whatsappNumber,
+  trialHours = 24,
+  trialPrice = 1.99,
+  currentLang = 'en',
+} = Astro.props;
+
+const t = getUITranslations(currentLang as LanguageCode);
+
+const stats = [
+  { label: t.hero.liveChannels || 'Live Channels', value: `${channelCount.toLocaleString()}+`, icon: 'tv' },
+  { label: t.hero.moviesAndSeries || 'Movies & Series', value: `${vodCount.toLocaleString()}+`, icon: 'film' },
+  { label: t.hero.uptime || 'Uptime', value: '99.9%', icon: 'clock' },
+  { label: t.hero.support || 'Support', value: '24/7', icon: 'headphones' },
+];
+
+const highlights = [
+  t.hero.hdQuality || 'HD & 4K Quality',
+  t.hero.noContract || 'No Contract',
+  t.hero.instantActivation || 'Instant Activation',
+  t.hero.allDevices || 'All Devices'
+];
+const devices = ['Smart TV', 'Fire Stick', 'Android', 'iOS', 'Windows', 'MAG Box'];
+
+const trialLink = whatsappNumber 
+  ? `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(`Hello ${title}, I'd like to request a ${trialHours}-hour free trial!`)}`
+  : '/free-trial';
+---
+
+<section class="relative overflow-hidden bg-gradient-to-br from-background via-background to-muted/50 py-20 lg:py-28">
+  <div class="absolute inset-0 bg-grid-pattern opacity-5"></div>
+  
+  <div 
+    class="absolute -top-40 -right-40 w-96 h-96 rounded-full blur-3xl opacity-20"
+    style={`background-color: ${primaryColor}`}
+  ></div>
+  <div 
+    class="absolute -bottom-40 -left-40 w-96 h-96 rounded-full blur-3xl opacity-20"
+    style={`background-color: ${primaryColor}`}
+  ></div>
+  
+  <div class="container relative mx-auto px-4">
+    <div class="mx-auto max-w-4xl text-center">
+      <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-muted border border-border mb-6 animate-fade-in">
+        <svg class="w-4 h-4 fill-yellow-400 text-yellow-400" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+        <span class="text-sm font-medium">{t.hero.trustedBy}</span>
+        <div class="flex -space-x-1">
+          {[...Array(5)].map(() => (
+            <svg class="w-3 h-3 fill-yellow-400 text-yellow-400" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+          ))}
+        </div>
+      </div>
+
+      <h1 class="text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl animate-fade-in" data-speakable="true">
+        {t.hero.premium} <span style={`color: ${primaryColor}`}>{title}</span> {t.hero.service}
+      </h1>
+      
+      <p class="mt-6 text-xl text-muted-foreground max-w-2xl mx-auto animate-slide-up direct-answer" data-speakable="true">
+        {subtitle}
+      </p>
+
+      <div class="mt-6 flex flex-wrap justify-center gap-3 animate-slide-up">
+        {highlights.map((highlight) => (
+          <div class="flex items-center gap-1.5 text-sm text-muted-foreground">
+            <svg class="w-4 h-4" style={`color: ${primaryColor}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+            <span>{highlight}</span>
+          </div>
+        ))}
+      </div>
+
+      <div class="mt-10 flex flex-col sm:flex-row gap-4 justify-center animate-slide-up">
+        <a
+          href="#pricing"
+          class="inline-flex items-center justify-center rounded-lg px-8 py-4 text-base font-semibold text-white transition-all hover:opacity-90 hover:scale-105 shadow-lg"
+          style={`background-color: ${primaryColor}`}
+        >
+          <svg class="w-5 h-5 mr-2" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+          {t.hero.getStarted}
+          <svg class="ml-2 h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        </a>
+        
+        {showFreeTrial && whatsappNumber && (
+          <TrialFormModal
+            client:load
+            brandName={title}
+            trialHours={trialHours}
+            trialPrice={trialPrice}
+            whatsappNumber={whatsappNumber}
+            primaryColor={primaryColor}
+            buttonText={(t.hero.hrFreeTrial || '{hours}hr Free Trial').replace('{hours}', String(trialHours))}
+            priceLabel={`$${trialPrice}`}
+          />
+        )}
+        
+        {showFreeTrial && !whatsappNumber && (
+          <a
+            href="/free-trial"
+            class="inline-flex items-center justify-center rounded-lg border-2 bg-background px-8 py-4 text-base font-semibold transition-all hover:bg-muted"
+            style={`border-color: ${primaryColor}; color: ${primaryColor}`}
+          >
+            <svg class="w-5 h-5 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/><line x1="12" y1="22" x2="12" y2="7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></svg>
+            {(t.hero.hrFreeTrial || '{hours}hr Free Trial').replace('{hours}', String(trialHours))}
+          </a>
+        )}
+      </div>
+
+      <p class="mt-4 text-sm text-muted-foreground animate-slide-up">
+        {t.hero.noCardRequired}
+      </p>
+    </div>
+
+    <div class="mt-16 grid grid-cols-2 gap-6 md:grid-cols-4 animate-slide-up">
+      {stats.map((stat) => (
+        <div class="text-center p-4 rounded-xl bg-card/50 border border-border/50 backdrop-blur-sm">
+          <div 
+            class="mx-auto h-14 w-14 rounded-full flex items-center justify-center mb-3"
+            style={`background-color: ${primaryColor}15`}
+          >
+            {stat.icon === 'tv' && (
+              <svg class="h-7 w-7" style={`color: ${primaryColor}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="15" rx="2" ry="2"/><polyline points="17 2 12 7 7 2"/></svg>
+            )}
+            {stat.icon === 'film' && (
+              <svg class="h-7 w-7" style={`color: ${primaryColor}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"/><line x1="7" y1="2" x2="7" y2="22"/><line x1="17" y1="2" x2="17" y2="22"/><line x1="2" y1="12" x2="22" y2="12"/><line x1="2" y1="7" x2="7" y2="7"/><line x1="2" y1="17" x2="7" y2="17"/><line x1="17" y1="17" x2="22" y2="17"/><line x1="17" y1="7" x2="22" y2="7"/></svg>
+            )}
+            {stat.icon === 'clock' && (
+              <svg class="h-7 w-7" style={`color: ${primaryColor}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            )}
+            {stat.icon === 'headphones' && (
+              <svg class="h-7 w-7" style={`color: ${primaryColor}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/></svg>
+            )}
+          </div>
+          <div class="text-3xl font-bold">{stat.value}</div>
+          <div class="text-sm text-muted-foreground">{stat.label}</div>
+        </div>
+      ))}
+    </div>
+
+    <div class="mt-12 flex flex-wrap items-center justify-center gap-6 text-muted-foreground animate-slide-up">
+      <span class="text-sm font-medium">{t.hero.compatibleWith}</span>
+      {devices.map((device) => (
+        <span class="text-sm px-3 py-1 rounded-full bg-muted border border-border">
+          {device}
+        </span>
+      ))}
+    </div>
+  </div>
+</section>

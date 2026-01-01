@@ -1,0 +1,137 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import SEO from '../../../components/SEO.astro';
+import { generateBreadcrumbSchema } from '../../../utils/schema';
+import { LANGUAGES, getUITranslations, defaultLanguage, type LanguageCode } from '../../../utils/i18n';
+
+export const prerender = true;
+
+export async function getStaticPaths() {
+  const apps = await getCollection('apps').catch(() => []);
+  const langs = Object.keys(LANGUAGES).filter(lang => lang !== defaultLanguage);
+  
+  const paths = [];
+  for (const lang of langs) {
+    for (const app of apps) {
+      paths.push({
+        params: { lang, slug: app.id },
+        props: { app, lang },
+      });
+    }
+  }
+  return paths;
+}
+
+interface Props {
+  app: any;
+  lang: string;
+}
+
+const { app, lang } = Astro.props;
+const currentLang = (lang || defaultLanguage) as LanguageCode;
+const t = getUITranslations(currentLang);
+
+const localizedHref = (path: string) => {
+  if (currentLang === defaultLanguage) return path;
+  const cleanPath = path === '/' ? '' : path;
+  return `/${currentLang}${cleanPath}`;
+};
+
+const serviceInfoEntries = await getCollection('service-info');
+const serviceInfo = serviceInfoEntries[0];
+const data = serviceInfo?.data || {};
+const baseUrl = data.siteUrl || Astro.url.origin;
+
+const breadcrumbs = [
+  { name: t.nav.home || 'Home', url: localizedHref('/') },
+  { name: t.nav.apps || 'Apps', url: localizedHref('/apps') },
+  { name: app.data.name, url: localizedHref(`/apps/${app.id}`) },
+];
+
+const breadcrumbSchema = generateBreadcrumbSchema(
+  breadcrumbs.map(b => ({ ...b, url: `${baseUrl}${b.url}` }))
+);
+
+const appSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'SoftwareApplication',
+  name: app.data.name,
+  description: app.data.description,
+  applicationCategory: 'MultimediaApplication',
+  operatingSystem: app.data.platforms?.join(', ') || 'Multiple',
+};
+---
+
+<BaseLayout currentLang={currentLang}>
+  <SEO
+    slot="head"
+    title={`${app.data.name} - ${t.apps?.title || 'Best IPTV App'}`}
+    description={app.data.description}
+    canonicalURL={`${baseUrl}/${currentLang}/apps/${app.id}`}
+    schema={[breadcrumbSchema, appSchema]}
+    pageType="guide"
+    breadcrumbs={breadcrumbs}
+    languages={Object.fromEntries(
+      Object.keys(LANGUAGES)
+        .filter(l => l !== currentLang)
+        .map(l => [l, l === defaultLanguage ? `${baseUrl}/apps/${app.id}` : `${baseUrl}/${l}/apps/${app.id}`])
+    )}
+  />
+
+  <div class="max-w-4xl mx-auto px-4 py-12">
+    <nav class="mb-8">
+      <ol class="flex items-center gap-2 text-sm text-muted-foreground">
+        {breadcrumbs.map((crumb, i) => (
+          <>
+            {i > 0 && <span>/</span>}
+            <li>
+              {i < breadcrumbs.length - 1 ? (
+                <a href={crumb.url} class="hover:text-primary transition-colors">{crumb.name}</a>
+              ) : (
+                <span class="text-foreground font-medium">{crumb.name}</span>
+              )}
+            </li>
+          </>
+        ))}
+      </ol>
+    </nav>
+
+    <header class="mb-8">
+      <h1 class="text-4xl font-bold mb-4">{app.data.name}</h1>
+      <p class="text-xl text-muted-foreground">{app.data.description}</p>
+      
+      {app.data.platforms && app.data.platforms.length > 0 && (
+        <div class="flex flex-wrap gap-2 mt-4">
+          {app.data.platforms.map((platform: string) => (
+            <span class="px-3 py-1 bg-muted rounded-full text-sm">{platform}</span>
+          ))}
+        </div>
+      )}
+    </header>
+
+    <div class="prose prose-lg dark:prose-invert max-w-none">
+      <h2>{t.apps?.about?.replace('{name}', app.data.name) || `About ${app.data.name}`}</h2>
+      <p>
+        {app.data.name} {t.apps?.aboutDesc?.replace('{brand}', data.brandName) || `is one of the best IPTV player apps available. It's fully compatible with ${data.brandName} and provides an excellent streaming experience.`}
+      </p>
+
+      <h2>{t.apps?.keyFeatures || 'Key Features'}</h2>
+      <ul>
+        <li>{t.apps?.feature1 || 'Easy M3U and Xtream Codes support'}</li>
+        <li>{t.apps?.feature2 || 'EPG (Electronic Program Guide) integration'}</li>
+        <li>{t.apps?.feature3 || 'Favorites and playlist management'}</li>
+        <li>{t.apps?.feature4 || 'Multi-screen support'}</li>
+        <li>{t.apps?.feature5 || 'Regular updates and improvements'}</li>
+      </ul>
+
+      <h2>{t.apps?.howToUse?.replace('{brand}', data.brandName) || `How to Use with ${data.brandName}`}</h2>
+      <ol>
+        <li>{t.apps?.step1?.replace('{name}', app.data.name) || `Download and install ${app.data.name} on your device`}</li>
+        <li>{t.apps?.step2 || 'Open the app and navigate to settings'}</li>
+        <li>{t.apps?.step3 || 'Enter your subscription credentials'}</li>
+        <li>{t.apps?.step4 || 'Save and start watching your content'}</li>
+      </ol>
+    </div>
+  </div>
+</BaseLayout>
